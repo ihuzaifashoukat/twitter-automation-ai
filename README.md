@@ -35,7 +35,7 @@ This repository contains a Python script designed to automate interacting with T
 
     ```bash
     git clone https://github.com/ihuzaifashoukat/twitter-automation-ai.git
-    cd twitter-automation-script
+    cd twitter-automation-ai
     ```
 
 2. **Create a virtual environment** (optional but recommended)

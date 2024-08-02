@@ -1,10 +1,10 @@
-# Twitter Automation Script
+# Twitter Automation AI
 
 This repository contains a Python script designed to automate interacting with Twitter using scraped data and generating insightful replies using OpenAI's language model. The script searches for tweets containing specific keywords and replies to them with contextually relevant comments.
 
 ## Table of Contents
 
-- [Twitter Automation Script](#twitter-automation-script)
+- [Twitter Automation AI](#twitter-automation-ai)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Requirements](#requirements)

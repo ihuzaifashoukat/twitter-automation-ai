@@ -1,3 +1,5 @@
 twscrape
 twitter-api-client
 openai
+asyncio
+selenium

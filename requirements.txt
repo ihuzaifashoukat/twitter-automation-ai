@@ -1,5 +1,8 @@
-twscrape
-twitter-api-client
-openai
-asyncio
 selenium
+webdriver-manager
+fake-headers
+pydantic
+langchain-google-genai
+openai
+requests
+python-dotenv

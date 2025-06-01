@@ -1,0 +1,78 @@
+{
+  "api_keys": {
+    "gemini_api_key": "YOUR_GEMINI_API_KEY_HERE_OR_LEAVE_BLANK_IF_USING_ENV",
+    "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
+    "azure_openai_api_key": "YOUR_AZURE_OPENAI_API_KEY_HERE",
+    "azure_openai_endpoint": "YOUR_AZURE_OPENAI_ENDPOINT_HERE",
+    "azure_openai_deployment": "YOUR_AZURE_OPENAI_DEPLOYMENT_NAME_HERE",
+    "azure_api_version": "2024-05-01-preview"
+  },
+  "twitter_automation": {
+    "response_interval_seconds": 300,
+    "max_tweets_per_keyword_scrape": 15,
+    "media_directory": "media_files",
+    "processed_tweets_file": "processed_tweets_log.csv",
+    "cookie_file_per_account_in_accounts_json": true,
+    "action_config": {
+      "min_delay_between_actions_seconds": 60,
+      "max_delay_between_actions_seconds": 180,
+      "enable_competitor_reposts": true,
+      "max_posts_per_competitor_run": 1,
+      "repost_only_tweets_with_media": false,
+      "min_likes_for_repost_candidate": 10,
+      "min_retweets_for_repost_candidate": 2,
+      "competitor_post_interaction_type": "repost",
+      "prompt_for_quote_tweet_from_competitor": "Interesting perspective by {user_handle}: '{tweet_text}'. What are your thoughts? #AI #Discussion",
+      "enable_keyword_replies": false,
+      "max_replies_per_keyword_run": 2,
+      "reply_only_to_recent_tweets_hours": 24,
+      "avoid_replying_to_own_tweets": true,
+      "enable_content_curation_posts": false,
+      "max_curated_posts_per_run": 1,
+      "enable_liking_tweets": false,
+      "max_likes_per_run": 5,
+      "like_tweets_from_keywords": null,
+      "like_tweets_from_feed": false,
+      "enable_thread_analysis": true,
+      "llm_settings_for_post": {
+        "service_preference": "gemini",
+        "max_tokens": 150,
+        "temperature": 0.7
+      },
+      "llm_settings_for_reply": {
+        "service_preference": "gemini",
+        "max_tokens": 100,
+        "temperature": 0.75
+      },
+      "llm_settings_for_thread_analysis": {
+        "service_preference": "gemini",
+        "model_name_override": "gemini-1.5-flash-latest",
+        "max_tokens": 50,
+        "temperature": 0.1
+      }
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(levelname)s - %(module)s - %(message)s"
+  },
+  "browser_settings": {
+    "type": "firefox",
+    "headless": true,
+    "user_agent_generation": "random",
+    "custom_user_agent": null,
+    "proxy": null,
+    "window_size": "1920,1080",
+    "driver_options": [
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
+      "--ignore-certificate-errors",
+      "--disable-gpu",
+      "--log-level=3",
+      "--disable-notifications",
+      "--disable-popup-blocking"
+    ],
+    "page_load_timeout_seconds": 30,
+    "script_timeout_seconds": 30
+  }
+}

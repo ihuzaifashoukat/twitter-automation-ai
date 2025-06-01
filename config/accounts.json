@@ -1,0 +1,68 @@
+[
+  {
+    "account_id": "tech_innovator_001",
+    "is_active": true,
+    "cookie_file_path": "config/tech_innovator_001_cookies.json",
+    "target_keywords_override": [
+      "Artificial General Intelligence",
+      "Large Language Models applications",
+      "AI Ethics in practice",
+      "Future of AI"
+    ],
+    "competitor_profiles_override": [
+      "https://x.com/OpenAI",
+      "https://x.com/DeepMind",
+      "https://x.com/MetaAI"
+    ],
+    "news_sites_override": [
+      "https://techcrunch.com/category/artificial-intelligence/",
+      "https://www.technologyreview.com/artificial-intelligence/"
+    ],
+    "research_paper_sites_override": [
+      "https://arxiv.org/list/cs.AI/pastweek?show=10"
+    ],
+    "llm_settings_override": {
+      "service_preference": "openai",
+      "model_name_override": "gpt-4o",
+      "max_tokens": 200,
+      "temperature": 0.7
+    },
+    "action_config_override": {
+      "min_delay_between_actions_seconds": 90,
+      "max_delay_between_actions_seconds": 240,
+      "enable_competitor_reposts": true,
+      "max_posts_per_competitor_run": 2,
+      "min_likes_for_repost_candidate": 20,
+      "min_retweets_for_repost_candidate": 5,
+      "enable_thread_analysis": true,
+      "llm_settings_for_post": {
+        "service_preference": "openai",
+        "model_name_override": "gpt-4o",
+        "max_tokens": 250,
+        "temperature": 0.72
+      }
+    }
+  },
+  {
+    "account_id": "general_updates_002",
+    "is_active": true,
+    "cookie_file_path": "config/general_updates_002_cookies.json",
+    "action_config_override": {
+      "max_posts_per_competitor_run": 1,
+      "enable_keyword_replies": true,
+      "max_replies_per_keyword_run": 1,
+      "llm_settings_for_reply": {
+        "service_preference": "gemini",
+        "model_name_override": "gemini-1.5-flash-latest",
+        "max_tokens": 120,
+        "temperature": 0.65
+      }
+    }
+  },
+  {
+    "account_id": "inactive_test_account_003",
+    "is_active": false,
+    "cookie_file_path": "config/inactive_test_account_003_cookies.json",
+    "target_keywords_override": ["testing", "inactive"]
+  }
+]

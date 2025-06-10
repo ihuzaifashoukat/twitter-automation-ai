@@ -41,7 +41,7 @@ twitter-automation-ai/
 
 1.  **Clone the repository:**
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/ihuzaifashoukat/twitter-automation-ai
     cd twitter-automation-ai
     ```
 

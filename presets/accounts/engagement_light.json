@@ -1,0 +1,38 @@
+[
+  {
+    "account_id": "your_account_id_light",
+    "is_active": true,
+    "cookie_file_path": "config/your_account_id_light_cookies.json",
+    "proxy": null,
+    "post_to_community": false,
+    "community_id": null,
+    "community_name": null,
+    "target_keywords_override": [
+      "news",
+      "updates",
+      "AI"
+    ],
+    "competitor_profiles_override": [
+      "https://x.com/TechCrunch",
+      "https://x.com/thenextweb"
+    ],
+    "action_config_override": {
+      "min_delay_between_actions_seconds": 120,
+      "max_delay_between_actions_seconds": 300,
+      "enable_competitor_reposts": false,
+      "max_posts_per_competitor_run": 0,
+      "enable_keyword_replies": true,
+      "max_replies_per_keyword_run": 1,
+      "reply_only_to_recent_tweets_hours": 24,
+      "avoid_replying_to_own_tweets": true,
+      "enable_liking_tweets": true,
+      "max_likes_per_run": 2,
+      "enable_content_curation_posts": false,
+      "enable_relevance_filter_keyword_replies": true,
+      "relevance_threshold_keyword_replies": 0.7,
+      "enable_relevance_filter_likes": true,
+      "relevance_threshold_likes": 0.45,
+      "enable_engagement_decision": false
+    }
+  }
+]

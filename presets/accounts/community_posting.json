@@ -1,0 +1,35 @@
+[
+  {
+    "account_id": "your_account_id_community",
+    "is_active": true,
+    "cookie_file_path": "config/your_account_id_community_cookies.json",
+    "proxy": null,
+    "post_to_community": true,
+    "community_id": "REPLACE_WITH_COMMUNITY_ID",
+    "community_name": "REPLACE_WITH_COMMUNITY_NAME",
+    "target_keywords_override": [
+      "community topic",
+      "fan discussions",
+      "latest news"
+    ],
+    "competitor_profiles_override": [
+      "https://x.com/OpenAI",
+      "https://x.com/DeepMind"
+    ],
+    "action_config_override": {
+      "enable_competitor_reposts": true,
+      "max_posts_per_competitor_run": 1,
+      "enable_content_curation_posts": true,
+      "max_curated_posts_per_run": 1,
+      "enable_liking_tweets": true,
+      "max_likes_per_run": 3,
+      "enable_relevance_filter_competitor_reposts": true,
+      "relevance_threshold_competitor_reposts": 0.5,
+      "enable_engagement_decision": true,
+      "use_sentiment_in_decision": true,
+      "decision_quote_min": 0.8,
+      "decision_retweet_min": 0.55,
+      "decision_repost_min": 0.4
+    }
+  }
+]

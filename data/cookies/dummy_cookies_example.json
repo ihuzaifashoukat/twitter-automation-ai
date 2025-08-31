@@ -1,0 +1,23 @@
+[
+  {
+    "name": "auth_token",
+    "value": "DUMMY_AUTH_TOKEN_VALUE",
+    "domain": ".x.com",
+    "path": "/",
+    "expires": 1754092800,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ct0",
+    "value": "DUMMY_CSRF_TOKEN_VALUE",
+    "domain": ".x.com",
+    "path": "/",
+    "expires": 1754092800,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  }
+]
+

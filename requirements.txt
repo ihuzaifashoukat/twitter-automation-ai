@@ -6,3 +6,5 @@ langchain-google-genai
 openai
 requests
 python-dotenv
+undetected-chromedriver
+selenium-stealth

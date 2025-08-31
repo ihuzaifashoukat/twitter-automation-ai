@@ -1,0 +1,13 @@
+{
+  "account_id": "tech_innovator_001",
+  "counters": {
+    "posts": 4,
+    "replies": 1,
+    "retweets": 1,
+    "quote_tweets": 0,
+    "likes": 0,
+    "errors": 31
+  },
+  "last_run_started_at": "2025-08-28T20:25:29.640758",
+  "last_run_finished_at": "2025-08-28T20:33:00.878199"
+}

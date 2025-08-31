@@ -1,4 +1,5 @@
 import os
+import logging
 import sys
 import csv
 import json
@@ -18,7 +19,9 @@ except ImportError:
     from src.utils.logger import setup_logger
 
 config_loader_instance = ConfigLoader() # Initialize once
-logger = setup_logger(config_loader_instance)
+# Initialize logging configuration and get a module-specific logger
+setup_logger(config_loader_instance)
+logger = logging.getLogger(__name__)
 
 # Define project root relative to this file's location (src/utils/file_handler.py)
 # Path(__file__) -> current file

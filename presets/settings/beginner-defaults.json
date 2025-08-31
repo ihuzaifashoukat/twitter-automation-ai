@@ -1,6 +1,6 @@
 {
   "api_keys": {
-    "gemini_api_key": "",
+    "gemini_api_key": "YOUR_GEMINI_API_KEY_HERE_OR_LEAVE_BLANK_IF_USING_ENV",
     "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
     "azure_openai_api_key": "YOUR_AZURE_OPENAI_API_KEY_HERE",
     "azure_openai_endpoint": "YOUR_AZURE_OPENAI_ENDPOINT_HERE",
@@ -25,7 +25,7 @@
       }
     },
     "engagement_decision": {
-      "enabled": false,
+      "enabled": true,
       "use_sentiment": true,
       "thresholds": {
         "quote_min": 0.75,
@@ -41,7 +41,7 @@
       "repost_only_tweets_with_media": false,
       "min_likes_for_repost_candidate": 10,
       "min_retweets_for_repost_candidate": 2,
-      "competitor_post_interaction_type": "retweet",
+      "competitor_post_interaction_type": "repost",
       "prompt_for_quote_tweet_from_competitor": "Interesting perspective by {user_handle}: '{tweet_text}'. What are your thoughts? #AI #Discussion",
       "enable_keyword_replies": false,
       "max_replies_per_keyword_run": 2,
@@ -56,7 +56,6 @@
       "enable_thread_analysis": true,
       "llm_settings_for_post": {
         "service_preference": "gemini",
-        "model_name_override": "gemini-2.5-flash",
         "max_tokens": 150,
         "temperature": 0.7
       },
@@ -67,7 +66,7 @@
       },
       "llm_settings_for_thread_analysis": {
         "service_preference": "gemini",
-        "model_name_override": "gemini-2.5-flash",
+        "model_name_override": "gemini-1.5-flash-latest",
         "max_tokens": 50,
         "temperature": 0.1
       }
@@ -79,14 +78,13 @@
   },
   "browser_settings": {
     "type": "firefox",
-    "headless": false,
+    "headless": true,
     "user_agent_generation": "random",
     "custom_user_agent": null,
     "proxy": null,
     "window_size": "1920,1080",
-    "use_undetected_chromedriver": true,
-    "enable_stealth": false,
-    "cookie_domain_url": "https://x.com",
+    "use_undetected_chromedriver": false,
+    "enable_stealth": true,
     "driver_options": [
       "--no-sandbox",
       "--disable-dev-shm-usage",
@@ -98,13 +96,6 @@
     ],
     "page_load_timeout_seconds": 30,
     "script_timeout_seconds": 30,
-    "proxy_pools": {
-      "residential_eu": [
-        "http://user:${RESI_PASS}@eu1.proxy.local:8080",
-        "http://user:${RESI_PASS}@eu2.proxy.local:8080"
-      ]
-    },
-    "proxy_pool_strategy": "hash",
-    "proxy_pool_state_file": "data/proxy_pools_state.json"
+    "cookie_domain_url": "https://x.com"
   }
 }

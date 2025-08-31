@@ -1,0 +1,49 @@
+[
+  {
+    "account_id": "your_account_id_growth",
+    "is_active": true,
+    "cookie_file_path": "config/your_account_id_growth_cookies.json",
+    "proxy": "pool:residential_eu",
+    "post_to_community": false,
+    "community_id": null,
+    "community_name": null,
+    "target_keywords_override": [
+      "AI startups",
+      "LLM apps",
+      "AI engineering"
+    ],
+    "competitor_profiles_override": [
+      "https://x.com/OpenAI",
+      "https://x.com/DeepMind"
+    ],
+    "action_config_override": {
+      "min_delay_between_actions_seconds": 90,
+      "max_delay_between_actions_seconds": 240,
+      "enable_competitor_reposts": true,
+      "repost_only_tweets_with_media": true,
+      "max_posts_per_competitor_run": 2,
+      "min_likes_for_repost_candidate": 10,
+      "min_retweets_for_repost_candidate": 2,
+      "enable_content_curation_posts": true,
+      "max_curated_posts_per_run": 2,
+      "enable_liking_tweets": true,
+      "max_likes_per_run": 5,
+      "enable_relevance_filter_competitor_reposts": true,
+      "relevance_threshold_competitor_reposts": 0.55,
+      "enable_relevance_filter_likes": true,
+      "relevance_threshold_likes": 0.4,
+      "enable_engagement_decision": true,
+      "use_sentiment_in_decision": true,
+      "decision_quote_min": 0.8,
+      "decision_retweet_min": 0.6,
+      "decision_repost_min": 0.45,
+      "llm_settings_for_post": {
+        "service_preference": "openai",
+        "model_name_override": "gpt-4o",
+        "max_tokens": 220,
+        "temperature": 0.68
+      }
+    }
+  }
+]
+

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import sys
 import os
 import time
@@ -18,10 +19,13 @@ from features.scraper import TweetScraper
 from features.publisher import TweetPublisher
 from features.engagement import TweetEngagement
 from features.analyzer import TweetAnalyzer
+from utils.metrics import MetricsRecorder
 
 # Initialize main config loader and logger
 main_config_loader = ConfigLoader()
-logger = setup_logger(main_config_loader)
+# Configure logging and get module logger
+setup_logger(main_config_loader)
+logger = logging.getLogger(__name__)
 
 class TwitterOrchestrator:
     def __init__(self):
@@ -31,10 +35,75 @@ class TwitterOrchestrator:
         self.accounts_data = self.config_loader.get_accounts_config()
         
         self.processed_action_keys = self.file_handler.load_processed_action_keys() # Load processed action keys
+        # Analysis and decision config snapshots
+        ta = self.global_settings.get('twitter_automation', {})
+        self.analysis_config = ta.get('analysis_config', {})
+        self.engagement_decision_cfg = ta.get('engagement_decision', {"enabled": False})
+
+    async def _decide_competitor_action(self, analyzer: TweetAnalyzer, tweet: ScrapedTweet, account: AccountConfig) -> str:
+        """Return one of: 'repost', 'retweet', 'quote_tweet', 'like' based on relevance and sentiment, honoring per-account overrides and thresholds."""
+        acc_ac = account.action_config
+        decision_enabled = (acc_ac.enable_engagement_decision if (acc_ac and acc_ac.enable_engagement_decision is not None)
+                            else self.engagement_decision_cfg.get('enabled', False))
+        use_sentiment = (acc_ac.use_sentiment_in_decision if (acc_ac and acc_ac.use_sentiment_in_decision is not None)
+                         else self.engagement_decision_cfg.get('use_sentiment', True))
+        # Thresholds: per-account overrides > global cfg > defaults
+        ed_thr = (self.engagement_decision_cfg.get('thresholds') or {}) if isinstance(self.engagement_decision_cfg, dict) else {}
+        quote_min = (acc_ac.decision_quote_min if (acc_ac and acc_ac.decision_quote_min is not None) else float(ed_thr.get('quote_min', 0.75)))
+        retweet_min = (acc_ac.decision_retweet_min if (acc_ac and acc_ac.decision_retweet_min is not None) else float(ed_thr.get('retweet_min', 0.5)))
+        repost_min = (acc_ac.decision_repost_min if (acc_ac and acc_ac.decision_repost_min is not None) else float(ed_thr.get('repost_min', 0.35)))
+        if not decision_enabled:
+            return (acc_ac.competitor_post_interaction_type if acc_ac else 'repost')
+        # Try structured analysis first
+        structured = await analyzer.analyze_tweet_structured(tweet, keywords=account.target_keywords)
+        if structured and isinstance(structured, dict) and 'recommended_action' in structured:
+            rel = float(structured.get('relevance', 0.0) or 0.0)
+            sentiment = str(structured.get('sentiment', 'neutral') or 'neutral').lower()
+            rec = str(structured.get('recommended_action')).lower()
+            # Apply minimal guardrails based on thresholds
+            if rel < repost_min:
+                return 'like'
+            if rec in ('quote_tweet', 'retweet', 'repost', 'like'):
+                return rec
+        # Fallback: Compute relevance and optionally sentiment
+        rel = await analyzer.score_relevance(tweet, keywords=account.target_keywords)
+        sentiment = 'neutral'
+        if use_sentiment:
+            try:
+                sentiment = await analyzer.classify_sentiment(tweet)
+            except Exception:
+                sentiment = 'neutral'
+        # Simple heuristic mapping
+        if rel >= quote_min and sentiment in ('positive', 'neutral'):
+            return 'quote_tweet'
+        if rel >= retweet_min and sentiment in ('positive', 'neutral'):
+            return 'retweet'
+        if rel >= repost_min:
+            return 'repost'
+        return 'like'
 
     async def _process_account(self, account_dict: dict):
         """Processes tasks for a single Twitter account."""
         
+        # Normalize legacy override keys to current AccountConfig fields
+        def _normalize_account_config(d: dict) -> dict:
+            normalized = dict(d)  # shallow copy
+            # Map legacy override fields if the new ones are missing
+            if 'target_keywords' not in normalized and 'target_keywords_override' in normalized:
+                normalized['target_keywords'] = normalized.get('target_keywords_override')
+            if 'competitor_profiles' not in normalized and 'competitor_profiles_override' in normalized:
+                normalized['competitor_profiles'] = normalized.get('competitor_profiles_override')
+            if 'news_sites' not in normalized and 'news_sites_override' in normalized:
+                normalized['news_sites'] = normalized.get('news_sites_override')
+            if 'research_paper_sites' not in normalized and 'research_paper_sites_override' in normalized:
+                normalized['research_paper_sites'] = normalized.get('research_paper_sites_override')
+            if 'action_config' not in normalized and 'action_config_override' in normalized:
+                normalized['action_config'] = normalized.get('action_config_override')
+            # Keep llm_settings_override as-is (same field name in model)
+            return normalized
+
+        account_dict = _normalize_account_config(account_dict)
+
         # Create AccountConfig Pydantic model from the dictionary
         try:
             # A simple way to map, assuming keys in dict match model fields or are handled by default values
@@ -65,6 +134,8 @@ class TwitterOrchestrator:
             scraper = TweetScraper(browser_manager, account_id=account.account_id)
             publisher = TweetPublisher(browser_manager, llm_service, account) # Publisher needs AccountConfig model
             engagement = TweetEngagement(browser_manager, account) # Engagement needs AccountConfig model
+            metrics = MetricsRecorder(account_id=account.account_id, config_loader=self.config_loader)
+            metrics.mark_run_start()
 
             # --- Define actions based on global and account-specific settings ---
             automation_settings = self.global_settings.get('twitter_automation', {}) # Global settings for twitter_automation
@@ -101,6 +172,20 @@ class TwitterOrchestrator:
                     for scraped_tweet in tweets_from_profile:
                         if posts_made_this_profile >= current_action_config.max_posts_per_competitor_run:
                             break
+                        # Optional relevance filter (settings-driven)
+                        try:
+                            acc_ac = account.action_config
+                            enable_rel = (acc_ac.enable_relevance_filter_competitor_reposts if (acc_ac and acc_ac.enable_relevance_filter_competitor_reposts is not None)
+                                          else self.analysis_config.get('enable_relevance_filter', {}).get('competitor_reposts', True))
+                            thr = (acc_ac.relevance_threshold_competitor_reposts if (acc_ac and acc_ac.relevance_threshold_competitor_reposts is not None)
+                                   else float(self.analysis_config.get('thresholds', {}).get('competitor_reposts_min', 0.35)))
+                            if enable_rel:
+                                rel_score = await analyzer.score_relevance(scraped_tweet, keywords=account.target_keywords)
+                                if rel_score < thr:
+                                    logger.debug(f"[{account.account_id}] Skipping tweet {scraped_tweet.tweet_id} (rel {rel_score:.2f} < {thr}).")
+                                    continue
+                        except Exception:
+                            pass
                         
                         if current_action_config.repost_only_tweets_with_media and not scraped_tweet.embedded_media_urls:
                             logger.debug(f"[{account.account_id}] Skipping tweet {scraped_tweet.tweet_id} (no media).")
@@ -112,7 +197,7 @@ class TwitterOrchestrator:
                             logger.debug(f"[{account.account_id}] Skipping tweet {scraped_tweet.tweet_id} (retweets {scraped_tweet.retweet_count} < min).")
                             continue
 
-                        interaction_type = current_action_config.competitor_post_interaction_type
+                        interaction_type = await self._decide_competitor_action(analyzer, scraped_tweet, account)
                         action_key = f"{interaction_type}_{account.account_id}_{scraped_tweet.tweet_id}"
                             
                         if action_key in self.processed_action_keys:
@@ -127,17 +212,32 @@ class TwitterOrchestrator:
 
                         interaction_success = False
 
-                        if interaction_type == "repost":
+                        if interaction_type == "like":
+                            logger.info(f"[{account.account_id}] Decided to like tweet {scraped_tweet.tweet_id}.")
+                            interaction_success = await engagement.like_tweet(tweet_id=scraped_tweet.tweet_id, tweet_url=str(scraped_tweet.tweet_url) if scraped_tweet.tweet_url else None)
+                            if interaction_success:
+                                metrics.increment('likes')
+                                metrics.log_event('like', 'success', {'source': 'competitor', 'tweet_id': scraped_tweet.tweet_id})
+                            else:
+                                metrics.increment('errors')
+                                metrics.log_event('like', 'failure', {'source': 'competitor', 'tweet_id': scraped_tweet.tweet_id})
+                        elif interaction_type == "repost":
                             prompt = f"Rewrite this tweet in an engaging way: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user'}."
                             if scraped_tweet.is_confirmed_thread:
                                 prompt = f"This tweet is part of a thread. Rewrite its essence engagingly: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user'}."
                             new_tweet_content = TweetContent(text=prompt)
                             logger.info(f"[{account.account_id}] Generating and posting new tweet based on {scraped_tweet.tweet_id}")
                             interaction_success = await publisher.post_new_tweet(new_tweet_content, llm_settings=llm_for_post)
+                            metrics.log_event('post', 'success' if interaction_success else 'failure', {'source': 'competitor', 'tweet_id': scraped_tweet.tweet_id})
+                            if interaction_success:
+                                metrics.increment('posts')
                         
                         elif interaction_type == "retweet":
                             logger.info(f"[{account.account_id}] Attempting to retweet {scraped_tweet.tweet_id}")
                             interaction_success = await publisher.retweet_tweet(scraped_tweet)
+                            metrics.log_event('retweet', 'success' if interaction_success else 'failure', {'tweet_id': scraped_tweet.tweet_id})
+                            if interaction_success:
+                                metrics.increment('retweets')
                         
                         elif interaction_type == "quote_tweet":
                             quote_prompt_template = current_action_config.prompt_for_quote_tweet_from_competitor
@@ -150,6 +250,9 @@ class TwitterOrchestrator:
                             interaction_success = await publisher.retweet_tweet(scraped_tweet, 
                                                                                 quote_text_prompt_or_direct=quote_prompt, 
                                                                                 llm_settings_for_quote=llm_for_post)
+                            metrics.log_event('quote_tweet', 'success' if interaction_success else 'failure', {'tweet_id': scraped_tweet.tweet_id})
+                            if interaction_success:
+                                metrics.increment('quote_tweets')
                         else:
                             logger.warning(f"[{account.account_id}] Unknown competitor_post_interaction_type: {interaction_type}")
                             continue
@@ -157,10 +260,12 @@ class TwitterOrchestrator:
                         if interaction_success:
                             self.file_handler.save_processed_action_key(action_key, timestamp=datetime.now().isoformat())
                             self.processed_action_keys.add(action_key) # Add to in-memory set for current run
-                            posts_made_this_profile += 1
+                            if interaction_type != 'like':
+                                posts_made_this_profile += 1
                             await asyncio.sleep(random.uniform(current_action_config.min_delay_between_actions_seconds, current_action_config.max_delay_between_actions_seconds))
                         else:
                             logger.error(f"[{account.account_id}] Failed to {interaction_type} based on tweet {scraped_tweet.tweet_id}")
+                            metrics.increment('errors')
             
             elif current_action_config.enable_competitor_reposts:
                  logger.info(f"[{account.account_id}] Competitor reposts enabled, but no competitor profiles configured for this account.")
@@ -206,9 +311,16 @@ class TwitterOrchestrator:
                             scraped_tweet_to_reply.is_confirmed_thread = is_confirmed
                             logger.info(f"[{account.account_id}] Thread analysis for reply target {scraped_tweet_to_reply.tweet_id}: {is_confirmed}")
 
-                        # Generate reply text
-                        reply_prompt_context = "This tweet is part of a thread." if scraped_tweet_to_reply.is_confirmed_thread else "This is a standalone tweet."
-                        reply_prompt = f"Generate an insightful and engaging reply to the following tweet. {reply_prompt_context}\n\nOriginal tweet by @{scraped_tweet_to_reply.user_handle or 'user'}:\n\"{scraped_tweet_to_reply.text_content}\"\n\nYour reply:"
+                        # Generate reply text (explicitly constrain length and style)
+                        reply_prompt_context = (
+                            "This tweet is part of a thread." if scraped_tweet_to_reply.is_confirmed_thread else "This is a standalone tweet."
+                        )
+                        reply_prompt = (
+                            f"Write a concise, natural reply under 270 characters. {reply_prompt_context} "
+                            f"Avoid hashtags, links, and emojis unless essential. One short paragraph.\n\n"
+                            f"Original tweet by @{scraped_tweet_to_reply.user_handle or 'user'}:\n"
+                            f"\"{scraped_tweet_to_reply.text_content}\"\n\nYour reply:"
+                        )
                         
                         logger.info(f"[{account.account_id}] Generating reply for tweet {scraped_tweet_to_reply.tweet_id}...")
                         generated_reply_text = await llm_service.generate_text(
@@ -222,9 +334,31 @@ class TwitterOrchestrator:
                         if not generated_reply_text:
                             logger.error(f"[{account.account_id}] Failed to generate reply text for tweet {scraped_tweet_to_reply.tweet_id}. Skipping.")
                             continue
+                        # Hard-cap reply length to 270 characters
+                        generated_reply_text = (generated_reply_text or "")[:270].rstrip()
                         
+                        # Optional relevance filter for keyword replies
+                        try:
+                            acc_ac = account.action_config
+                            enable_rel_reply = (acc_ac.enable_relevance_filter_keyword_replies if (acc_ac and acc_ac.enable_relevance_filter_keyword_replies is not None)
+                                                else self.analysis_config.get('enable_relevance_filter', {}).get('keyword_replies', False))
+                            thr_reply = (acc_ac.relevance_threshold_keyword_replies if (acc_ac and acc_ac.relevance_threshold_keyword_replies is not None)
+                                         else float(self.analysis_config.get('thresholds', {}).get('keyword_replies_min', 0.35)))
+                            if enable_rel_reply:
+                                rel_reply = await analyzer.score_relevance(scraped_tweet_to_reply, keywords=account.target_keywords)
+                                if rel_reply < thr_reply:
+                                    logger.debug(f"[{account.account_id}] Skipping reply to {scraped_tweet_to_reply.tweet_id} (rel {rel_reply:.2f} < {thr_reply}).")
+                                    continue
+                        except Exception:
+                            pass
+
                         logger.info(f"[{account.account_id}] Attempting to post reply to tweet {scraped_tweet_to_reply.tweet_id}...")
                         reply_success = await publisher.reply_to_tweet(scraped_tweet_to_reply, generated_reply_text)
+                        metrics.log_event('reply', 'success' if reply_success else 'failure', {'tweet_id': scraped_tweet_to_reply.tweet_id})
+                        if reply_success:
+                            metrics.increment('replies')
+                        else:
+                            metrics.increment('errors')
 
                         if reply_success:
                             self.file_handler.save_processed_action_key(action_key, timestamp=datetime.now().isoformat())
@@ -238,6 +372,44 @@ class TwitterOrchestrator:
             elif current_action_config.enable_keyword_replies:
                 logger.info(f"[{account.account_id}] Keyword replies enabled, but no target keywords configured for this account.")
 
+            # Action 2b: Retweet tweets from keywords
+            if getattr(current_action_config, 'enable_keyword_retweets', False) and target_keywords_for_account:
+                logger.info(f"[{account.account_id}] Starting keyword-based retweets for {len(target_keywords_for_account)} keywords.")
+                for keyword in target_keywords_for_account:
+                    logger.info(f"[{account.account_id}] Processing keyword for retweets: '{keyword}'")
+                    tweets_for_keyword = await asyncio.to_thread(
+                        scraper.scrape_tweets_by_keyword,
+                        keyword,
+                        max_tweets=max(5, current_action_config.max_retweets_per_keyword_run * 3)
+                    )
+                    retweets_made = 0
+                    for tweet_candidate in tweets_for_keyword:
+                        if retweets_made >= current_action_config.max_retweets_per_keyword_run:
+                            break
+                        # Optional relevance filter: reuse likes filter settings if available
+                        try:
+                            acc_ac = account.action_config
+                            enable_rel_like = (acc_ac.enable_relevance_filter_likes if (acc_ac and acc_ac.enable_relevance_filter_likes is not None)
+                                               else self.analysis_config.get('enable_relevance_filter', {}).get('likes', True))
+                            thr_like = (acc_ac.relevance_threshold_likes if (acc_ac and acc_ac.relevance_threshold_likes is not None)
+                                        else float(self.analysis_config.get('thresholds', {}).get('likes_min', 0.3)))
+                            if enable_rel_like:
+                                rel_like = await analyzer.score_relevance(tweet_candidate, keywords=account.target_keywords)
+                                if rel_like < thr_like:
+                                    continue
+                        except Exception:
+                            pass
+                        interaction_success = await publisher.retweet_tweet(tweet_candidate)
+                        if interaction_success:
+                            retweets_made += 1
+                            metrics.increment('retweets')
+                            metrics.log_event('retweet', 'success', {'source': 'keyword', 'keyword': keyword, 'tweet_id': tweet_candidate.tweet_id})
+                            await asyncio.sleep(random.uniform(current_action_config.min_delay_between_actions_seconds, current_action_config.max_delay_between_actions_seconds))
+                        else:
+                            metrics.increment('errors')
+                            metrics.log_event('retweet', 'failure', {'source': 'keyword', 'keyword': keyword, 'tweet_id': tweet_candidate.tweet_id})
+                logger.info(f"[{account.account_id}] Finished keyword-based retweets.")
+
 
             # Action 3: Scrape news/research sites and post summaries/links
             news_sites_for_account = account.news_sites
@@ -250,7 +422,8 @@ class TwitterOrchestrator:
 
             # Action 4: Like tweets
             if current_action_config.enable_liking_tweets:
-                keywords_to_like = current_action_config.like_tweets_from_keywords or []
+                # Default to account target keywords if like list not configured
+                keywords_to_like = current_action_config.like_tweets_from_keywords or (account.target_keywords or [])
                 if keywords_to_like:
                     logger.info(f"[{account.account_id}] Starting to like tweets based on {len(keywords_to_like)} keywords.")
                     likes_done_this_run = 0
@@ -276,16 +449,34 @@ class TwitterOrchestrator:
                                 logger.info(f"[{account.account_id}] Skipping own tweet {tweet_to_like.tweet_id} for liking.")
                                 continue
 
+                            # Optional relevance filter for likes pipeline (settings-driven)
+                            try:
+                                acc_ac = account.action_config
+                                enable_rel_like = (acc_ac.enable_relevance_filter_likes if (acc_ac and acc_ac.enable_relevance_filter_likes is not None)
+                                                   else self.analysis_config.get('enable_relevance_filter', {}).get('likes', True))
+                                thr_like = (acc_ac.relevance_threshold_likes if (acc_ac and acc_ac.relevance_threshold_likes is not None)
+                                            else float(self.analysis_config.get('thresholds', {}).get('likes_min', 0.3)))
+                                if enable_rel_like:
+                                    rel_like = await analyzer.score_relevance(tweet_to_like, keywords=account.target_keywords)
+                                    if rel_like < thr_like:
+                                        logger.debug(f"[{account.account_id}] Skipping like {tweet_to_like.tweet_id} (rel {rel_like:.2f} < {thr_like}).")
+                                        continue
+                            except Exception:
+                                pass
+
                             logger.info(f"[{account.account_id}] Attempting to like tweet {tweet_to_like.tweet_id} from URL: {tweet_to_like.tweet_url}")
                             like_success = await engagement.like_tweet(tweet_id=tweet_to_like.tweet_id, tweet_url=str(tweet_to_like.tweet_url) if tweet_to_like.tweet_url else None)
+                            metrics.log_event('like', 'success' if like_success else 'failure', {'tweet_id': tweet_to_like.tweet_id})
                             
                             if like_success:
                                 self.file_handler.save_processed_action_key(action_key, timestamp=datetime.now().isoformat())
                                 self.processed_action_keys.add(action_key)
                                 likes_done_this_run += 1
                                 await asyncio.sleep(random.uniform(current_action_config.min_delay_between_actions_seconds / 2, current_action_config.max_delay_between_actions_seconds / 2)) # Shorter delay for likes
+                                metrics.increment('likes')
                             else:
                                 logger.warning(f"[{account.account_id}] Failed to like tweet {tweet_to_like.tweet_id}.")
+                                metrics.increment('errors')
                 
                 elif current_action_config.like_tweets_from_feed:
                     logger.warning(f"[{account.account_id}] Liking tweets from feed is enabled but not yet implemented.")
@@ -299,6 +490,10 @@ class TwitterOrchestrator:
         finally:
             if browser_manager:
                 browser_manager.close_driver()
+            try:
+                metrics.mark_run_finish()
+            except Exception:
+                pass
             # Safely log account ID
             account_id_for_log = account_dict.get('account_id', 'UnknownAccount')
             if 'account' in locals() and hasattr(account, 'account_id'):

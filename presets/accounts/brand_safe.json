@@ -1,0 +1,42 @@
+[
+  {
+    "account_id": "your_account_id_brand_safe",
+    "is_active": true,
+    "cookie_file_path": "config/your_account_id_brand_safe_cookies.json",
+    "proxy": null,
+    "post_to_community": false,
+    "community_id": null,
+    "community_name": null,
+    "target_keywords_override": [
+      "AI ethics",
+      "responsible AI",
+      "trustworthy AI"
+    ],
+    "competitor_profiles_override": [
+      "https://x.com/PartnershipAI",
+      "https://x.com/stanfordai"
+    ],
+    "action_config_override": {
+      "min_delay_between_actions_seconds": 120,
+      "max_delay_between_actions_seconds": 300,
+      "enable_competitor_reposts": true,
+      "repost_only_tweets_with_media": true,
+      "max_posts_per_competitor_run": 1,
+      "min_likes_for_repost_candidate": 20,
+      "min_retweets_for_repost_candidate": 5,
+      "enable_content_curation_posts": true,
+      "max_curated_posts_per_run": 1,
+      "enable_liking_tweets": true,
+      "max_likes_per_run": 3,
+      "enable_relevance_filter_competitor_reposts": true,
+      "relevance_threshold_competitor_reposts": 0.65,
+      "enable_relevance_filter_likes": true,
+      "relevance_threshold_likes": 0.5,
+      "enable_engagement_decision": true,
+      "use_sentiment_in_decision": true,
+      "decision_quote_min": 0.85,
+      "decision_retweet_min": 0.65,
+      "decision_repost_min": 0.5
+    }
+  }
+]

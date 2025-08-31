@@ -1,0 +1,32 @@
+{
+  "api_keys": {
+    "gemini_api_key": "YOUR_GEMINI_API_KEY_HERE_OR_LEAVE_BLANK_IF_USING_ENV",
+    "openai_api_key": "YOUR_OPENAI_API_KEY_HERE"
+  },
+  "twitter_automation": {
+    "response_interval_seconds": 300,
+    "analysis_config": {"enable_relevance_filter": {"competitor_reposts": true, "likes": true}, "thresholds": {"competitor_reposts_min": 0.4, "likes_min": 0.3}},
+    "engagement_decision": {"enabled": true, "use_sentiment": true, "thresholds": {"quote_min": 0.8, "retweet_min": 0.55, "repost_min": 0.4}},
+    "action_config": {"enable_competitor_reposts": true, "max_posts_per_competitor_run": 1, "enable_liking_tweets": true, "max_likes_per_run": 4}
+  },
+  "logging": {"level": "INFO"},
+  "browser_settings": {
+    "type": "chrome",
+    "headless": true,
+    "use_undetected_chromedriver": true,
+    "enable_stealth": true,
+    "proxy_pools": {
+      "residential_eu": [
+        "http://user:${RESI_PASS}@eu1.proxy.local:8080",
+        "http://user:${RESI_PASS}@eu2.proxy.local:8080"
+      ],
+      "residential_us": [
+        "http://user:${RESI_PASS}@us1.proxy.local:8080",
+        "http://user:${RESI_PASS}@us2.proxy.local:8080"
+      ]
+    },
+    "proxy_pool_strategy": "hash",
+    "proxy_pool_state_file": "data/proxy_pools_state.json",
+    "cookie_domain_url": "https://x.com"
+  }
+}

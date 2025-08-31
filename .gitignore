@@ -26,7 +26,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
+.wdm_cache
 # PyInstaller
 #  Usually these files are written by a PyInstaller script; this is deployed to PyInstaller's temporary folder.
 *.manifest

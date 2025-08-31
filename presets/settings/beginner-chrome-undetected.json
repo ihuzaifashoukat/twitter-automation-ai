@@ -1,0 +1,58 @@
+{
+  "api_keys": {
+    "gemini_api_key": "YOUR_GEMINI_API_KEY_HERE_OR_LEAVE_BLANK_IF_USING_ENV",
+    "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
+    "azure_openai_api_key": "YOUR_AZURE_OPENAI_API_KEY_HERE",
+    "azure_openai_endpoint": "YOUR_AZURE_OPENAI_ENDPOINT_HERE",
+    "azure_openai_deployment": "YOUR_AZURE_OPENAI_DEPLOYMENT_NAME_HERE",
+    "azure_api_version": "2024-05-01-preview"
+  },
+  "twitter_automation": {
+    "response_interval_seconds": 300,
+    "media_directory": "media_files",
+    "processed_tweets_file": "processed_tweets_log.csv",
+    "analysis_config": {
+      "enable_relevance_filter": {"competitor_reposts": true, "likes": true, "keyword_replies": false},
+      "thresholds": {"competitor_reposts_min": 0.4, "likes_min": 0.3}
+    },
+    "engagement_decision": {
+      "enabled": true,
+      "use_sentiment": true,
+      "thresholds": {"quote_min": 0.75, "retweet_min": 0.55, "repost_min": 0.4}
+    },
+    "action_config": {
+      "min_delay_between_actions_seconds": 60,
+      "max_delay_between_actions_seconds": 210,
+      "enable_competitor_reposts": true,
+      "max_posts_per_competitor_run": 1,
+      "enable_keyword_replies": false,
+      "enable_content_curation_posts": true,
+      "max_curated_posts_per_run": 1,
+      "enable_liking_tweets": true,
+      "max_likes_per_run": 4,
+      "enable_thread_analysis": true,
+      "llm_settings_for_post": {"service_preference": "openai", "model_name_override": "gpt-4o", "max_tokens": 220, "temperature": 0.68}
+    }
+  },
+  "logging": {"level": "INFO", "format": "%(asctime)s - %(levelname)s - %(module)s - %(message)s"},
+  "browser_settings": {
+    "type": "chrome",
+    "headless": true,
+    "user_agent_generation": "random",
+    "window_size": "1920,1080",
+    "use_undetected_chromedriver": true,
+    "enable_stealth": true,
+    "driver_options": [
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
+      "--ignore-certificate-errors",
+      "--disable-gpu",
+      "--log-level=3",
+      "--disable-notifications",
+      "--disable-popup-blocking"
+    ],
+    "page_load_timeout_seconds": 30,
+    "script_timeout_seconds": 30,
+    "cookie_domain_url": "https://x.com"
+  }
+}

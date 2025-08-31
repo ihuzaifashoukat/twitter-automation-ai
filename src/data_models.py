@@ -52,6 +52,9 @@ class ActionConfig(BaseModel): # This can be global or per-account
     max_likes_per_run: int = Field(5, description="Max tweets to like per run.")
     like_tweets_from_keywords: Optional[List[str]] = Field(None, description="Keywords to search for tweets to like.")
     like_tweets_from_feed: bool = Field(False, description="Whether to like tweets from the main home feed.")
+    # Keyword-based retweets
+    enable_keyword_retweets: bool = Field(False, description="Enable retweeting tweets found via keyword searches.")
+    max_retweets_per_keyword_run: int = Field(1, description="Max retweets to perform per keyword per run.")
     
     # Thread analysis settings
     enable_thread_analysis: bool = Field(True, description="Enable LLM-based analysis to identify if a tweet is part of a thread.")
@@ -63,6 +66,23 @@ class ActionConfig(BaseModel): # This can be global or per-account
         default_factory=lambda: LLMSettings(max_tokens=70, temperature=0.2, service_preference='gemini') # Default to Gemini for this task
     )
 
+    # Optional per-account analysis and decision overrides (inherit from global when None)
+    enable_relevance_filter_competitor_reposts: Optional[bool] = Field(None, description="Override: enable relevance filter for competitor reposts.")
+    relevance_threshold_competitor_reposts: Optional[float] = Field(None, description="Override: min relevance [0,1] to act on competitor tweets.")
+    enable_relevance_filter_likes: Optional[bool] = Field(None, description="Override: enable relevance filter for likes pipeline.")
+    relevance_threshold_likes: Optional[float] = Field(None, description="Override: min relevance [0,1] to like a tweet.")
+    enable_relevance_filter_keyword_replies: Optional[bool] = Field(None, description="Override: enable relevance filter for keyword replies.")
+    relevance_threshold_keyword_replies: Optional[float] = Field(None, description="Override: min relevance [0,1] to reply via keyword pipeline.")
+
+    enable_engagement_decision: Optional[bool] = Field(None, description="Override: automatically decide repost/retweet/quote/like.")
+    use_sentiment_in_decision: Optional[bool] = Field(None, description="Override: include sentiment in decision heuristic.")
+
+    # Per-account decision thresholds for action choice based on relevance
+    # If None, fallbacks come from global engagement_decision.thresholds or hardcoded defaults
+    decision_quote_min: Optional[float] = Field(None, description="Relevance >= this triggers quote tweet.")
+    decision_retweet_min: Optional[float] = Field(None, description="Relevance >= this triggers retweet.")
+    decision_repost_min: Optional[float] = Field(None, description="Relevance >= this triggers repost; below becomes like.")
+
 
 class AccountConfig(BaseModel):
     account_id: str # e.g., username or a unique ID
@@ -70,6 +90,9 @@ class AccountConfig(BaseModel):
     # Cookies can be a list of cookie objects or a path to a JSON file containing them
     cookies: Optional[List[AccountCookie]] = None 
     cookie_file_path: Optional[str] = None # Relative to config dir or absolute
+    
+    # Per-account network routing
+    proxy: Optional[str] = Field(default=None, description="Per-account proxy URL, e.g., http://user:pass@host:port or socks5://host:port")
     
     # Optional: For username/password login if implemented
     username: Optional[str] = None
@@ -85,6 +108,11 @@ class AccountConfig(BaseModel):
     llm_settings_override: Optional[LLMSettings] = Field(None, description="General LLM settings override for this account.")
     # Account-specific action configurations (can include action-specific LLM settings)
     action_config: Optional[ActionConfig] = Field(None, description="Specific action configurations for this account. Overrides global action_config.")
+
+    # Community posting controls
+    post_to_community: bool = Field(default=False, description="If true, posts will be targeted to the specified community when composing.")
+    community_id: Optional[str] = Field(default=None, description="The target community ID to post into (as used by X.com URLs).")
+    community_name: Optional[str] = Field(default=None, description="Fallback community name to match in the audience picker if ID-based selection fails.")
 
 
 class TweetContent(BaseModel):

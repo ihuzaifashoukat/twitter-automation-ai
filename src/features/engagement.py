@@ -1,4 +1,5 @@
 import os
+import logging
 import sys
 import time
 from typing import Optional
@@ -23,7 +24,8 @@ except ImportError:
     from src.data_models import ScrapedTweet, AccountConfig
 
 config_loader_instance = ConfigLoader()
-logger = setup_logger(config_loader_instance)
+setup_logger(config_loader_instance)
+logger = logging.getLogger(__name__)
 
 class TweetEngagement:
     def __init__(self, browser_manager: BrowserManager, account_config: AccountConfig):

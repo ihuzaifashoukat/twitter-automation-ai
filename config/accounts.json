@@ -2,7 +2,11 @@
   {
     "account_id": "tech_innovator_001",
     "is_active": true,
-    "cookie_file_path": "config/tech_innovator_001_cookies.json",
+    "cookie_file_path": "config/dummy_cookies_example.json",
+    "proxy": "null",
+    "post_to_community": true,
+    "community_id": "1497313371053510658",
+    "community_name": "One Piece",
     "target_keywords_override": [
       "Artificial General Intelligence",
       "Large Language Models applications",
@@ -14,55 +18,52 @@
       "https://x.com/DeepMind",
       "https://x.com/MetaAI"
     ],
-    "news_sites_override": [
-      "https://techcrunch.com/category/artificial-intelligence/",
-      "https://www.technologyreview.com/artificial-intelligence/"
-    ],
-    "research_paper_sites_override": [
-      "https://arxiv.org/list/cs.AI/pastweek?show=10"
-    ],
     "llm_settings_override": {
-      "service_preference": "openai",
-      "model_name_override": "gpt-4o",
-      "max_tokens": 200,
+      "service_preference": "gemini",
+      "model_name_override": "gemini-2.5-flash",
+      "max_tokens": 1000,
       "temperature": 0.7
     },
     "action_config_override": {
       "min_delay_between_actions_seconds": 90,
       "max_delay_between_actions_seconds": 240,
       "enable_competitor_reposts": true,
-      "max_posts_per_competitor_run": 2,
+      "max_posts_per_competitor_run": 1,
+      "competitor_post_interaction_type": "repost",
       "min_likes_for_repost_candidate": 20,
       "min_retweets_for_repost_candidate": 5,
       "enable_thread_analysis": true,
-      "llm_settings_for_post": {
-        "service_preference": "openai",
-        "model_name_override": "gpt-4o",
-        "max_tokens": 250,
-        "temperature": 0.72
-      }
-    }
-  },
-  {
-    "account_id": "general_updates_002",
-    "is_active": true,
-    "cookie_file_path": "config/general_updates_002_cookies.json",
-    "action_config_override": {
-      "max_posts_per_competitor_run": 1,
+      "enable_liking_tweets": true,
+      "max_likes_per_run": 5,
+      "like_tweets_from_feed": false,
       "enable_keyword_replies": true,
-      "max_replies_per_keyword_run": 1,
-      "llm_settings_for_reply": {
+      "enable_content_curation_posts": true,
+      "enable_relevance_filter_competitor_reposts": true,
+      "relevance_threshold_competitor_reposts": 0.45,
+      "enable_relevance_filter_likes": true,
+      "relevance_threshold_likes": 0.35,
+      "enable_relevance_filter_keyword_replies": false,
+      "relevance_threshold_keyword_replies": 0.6,
+      "enable_engagement_decision": false,
+      "use_sentiment_in_decision": true,
+      "decision_quote_min": 0.8,
+      "decision_retweet_min": 0.55,
+      "decision_repost_min": 0.4,
+      "llm_settings_for_post": {
         "service_preference": "gemini",
         "model_name_override": "gemini-1.5-flash-latest",
-        "max_tokens": 120,
-        "temperature": 0.65
-      }
+        "max_tokens": 1000,
+        "temperature": 0.72
+      },
+      "enable_keyword_retweets": true,
+      "max_retweets_per_keyword_run": 1,
+      "like_tweets_from_keywords": [
+        "Artificial General Intelligence",
+        "Large Language Models applications",
+        "AI Ethics in practice",
+        "Future of AI"
+      ]
     }
-  },
-  {
-    "account_id": "inactive_test_account_003",
-    "is_active": false,
-    "cookie_file_path": "config/inactive_test_account_003_cookies.json",
-    "target_keywords_override": ["testing", "inactive"]
   }
+
 ]

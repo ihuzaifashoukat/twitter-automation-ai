@@ -14,6 +14,13 @@ from .drivers import (
     init_firefox_driver,
     apply_stealth_if_configured,
 )
+# Flexible import for login state utilities (works when run as module or script)
+try:
+    from src.utils.login_state import wait_for_signed_in  # type: ignore
+except Exception:  # pragma: no cover - fallback for various runner contexts
+    import sys, os
+    sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+    from src.utils.login_state import wait_for_signed_in  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +33,7 @@ class BrowserManager:
         self.account_config = account_config if account_config else {}
         self.cookies_data: Optional[List[Dict[str, Any]]] = None
         self.effective_proxy: Optional[str] = None
+        self.logged_in_handle: Optional[str] = None
 
         # Resolve proxy (supports utils.proxy_manager if present)
         try:
@@ -44,6 +52,11 @@ class BrowserManager:
             )
         else:
             self.effective_proxy = acct_proxy or self.browser_settings.get('proxy')
+
+        # Normalize common "unset" string values for proxy (e.g., "null", "none", "")
+        if isinstance(self.effective_proxy, str) and self.effective_proxy:
+            if self.effective_proxy.strip().lower() in ("null", "none", "", "false"):
+                self.effective_proxy = None
 
         # Configure webdriver_manager SSL verify if provided
         wdm_ssl_verify_config = self.browser_settings.get('webdriver_manager_ssl_verify')
@@ -138,6 +151,36 @@ class BrowserManager:
             apply_cookies(self.driver, self.cookies_data, cookie_domain_url)
             logger.info(f"Attempted to apply {len(self.cookies_data)} cookies to the browser session.")
 
+        # Optionally verify or allow manual login to establish a signed-in session
+        try:
+            login_wait_seconds = int(self.browser_settings.get('login_wait_seconds', 0))
+        except Exception:
+            login_wait_seconds = 0
+        try:
+            self.driver.get(self.browser_settings.get('cookie_domain_url', 'https://x.com') + '/home')
+        except Exception:
+            pass
+        signed_in = wait_for_signed_in(self.driver, max_wait_seconds=login_wait_seconds)
+        if signed_in:
+            logger.info("Session appears signed in.")
+            # Try to detect the logged-in handle for own-post avoidance
+            try:
+                from selenium.webdriver.common.by import By  # local import
+                profile_link = self.driver.find_element(By.XPATH, "//a[@data-testid='AppTabBar_Profile_Link']")
+                href = profile_link.get_attribute('href') if profile_link else None
+                if href and 'x.com/' in href:
+                    handle = href.rstrip('/').split('x.com/')[-1]
+                    if handle:
+                        self.logged_in_handle = handle.lstrip('@')
+                        logger.info(f"Detected logged-in handle: @{self.logged_in_handle}")
+            except Exception:
+                pass
+        else:
+            if login_wait_seconds > 0:
+                logger.warning("Session still appears logged out after waiting. Proceeding anyway.")
+            else:
+                logger.info("Session may not be signed in. Some actions may be limited. Configure valid cookies or set 'browser_settings.login_wait_seconds' to allow manual login.")
+
         return self.driver
 
     def close_driver(self) -> None:
@@ -188,4 +231,3 @@ class BrowserManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close_driver()
-

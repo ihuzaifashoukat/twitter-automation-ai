@@ -40,6 +40,32 @@ class TwitterOrchestrator:
         self.analysis_config = ta.get('analysis_config', {})
         self.engagement_decision_cfg = ta.get('engagement_decision', {"enabled": False})
 
+    @staticmethod
+    def _is_own_tweet(user_handle: str, account: AccountConfig, browser_manager: BrowserManager) -> bool:
+        """Return True if the given user_handle belongs to the current account.
+
+        Compares against:
+        - configured account.self_handles (if provided)
+        - browser_manager.logged_in_handle (if detected)
+        - account.account_id (as last-resort heuristic)
+        """
+        try:
+            handle = (user_handle or "").strip().lstrip('@').lower()
+            candidates = set()
+            # Explicit self handles from config
+            for h in (account.self_handles or []):
+                if isinstance(h, str) and h.strip():
+                    candidates.add(h.strip().lstrip('@').lower())
+            # Runtime-detected handle from UI
+            if getattr(browser_manager, 'logged_in_handle', None):
+                candidates.add(str(browser_manager.logged_in_handle).strip().lstrip('@').lower())
+            # Heuristic fallback: account_id (in case user set it to the handle)
+            if isinstance(account.account_id, str) and account.account_id.strip():
+                candidates.add(account.account_id.strip().lstrip('@').lower())
+            return handle in candidates and handle != ""
+        except Exception:
+            return False
+
     async def _decide_competitor_action(self, analyzer: TweetAnalyzer, tweet: ScrapedTweet, account: AccountConfig) -> str:
         """Return one of: 'repost', 'retweet', 'quote_tweet', 'like' based on relevance and sentiment, honoring per-account overrides and thresholds."""
         acc_ac = account.action_config
@@ -270,6 +296,147 @@ class TwitterOrchestrator:
             elif current_action_config.enable_competitor_reposts:
                  logger.info(f"[{account.account_id}] Competitor reposts enabled, but no competitor profiles configured for this account.")
 
+            # Action 1.5: Engage with posts inside a configured Community
+            if (
+                current_action_config.enable_community_engagement
+                and account.community_id
+            ):
+                try:
+                    community_url = f"https://x.com/i/communities/{account.community_id}"
+                    logger.info(f"[{account.account_id}] Scraping community timeline: {community_url}")
+                    # Scrape more than we plan to act on so we can filter
+                    to_scrape = max(10, current_action_config.max_community_engagements_per_run * 4)
+                    community_tweets = await asyncio.to_thread(
+                        scraper.scrape_tweets_from_url,
+                        community_url,
+                        "community",
+                        to_scrape,
+                    )
+
+                    total_community_actions = 0
+                    replies_made_in_community = 0
+
+                    for ct in community_tweets:
+                        if total_community_actions >= current_action_config.max_community_engagements_per_run:
+                            break
+
+                        # Avoid re-processing the same tweet for the same action
+                        # We'll create an action key per decided action below.
+
+                        # Decide how to engage (reuse competitor decision logic + thresholds)
+                        # Skip own posts entirely in the community
+                        if ct.user_handle and self._is_own_tweet(ct.user_handle, account, browser_manager):
+                            logger.info(f"[{account.account_id}] Skipping own community post {ct.tweet_id} ({ct.user_handle}).")
+                            try:
+                                skip_key = f"skip_own_{account.account_id}_{ct.tweet_id}"
+                                self.file_handler.save_processed_action_key(skip_key, timestamp=datetime.now().isoformat())
+                                self.processed_action_keys.add(skip_key)
+                            except Exception:
+                                pass
+                            continue
+
+                        decided_action = await self._decide_competitor_action(analyzer, ct, account)
+                        # Map 'repost' to 'retweet' for community (we do not synthesize new standalone posts here)
+                        if decided_action == 'repost' or decided_action == 'quote_tweet':
+                            # For community, collapse to a simple retweet action
+                            decided_action = 'retweet'
+
+                        interaction_success = False
+
+                        if decided_action == 'like' and current_action_config.enable_community_likes:
+                            action_key = f"community_like_{account.account_id}_{ct.tweet_id}"
+                            if action_key in self.processed_action_keys:
+                                continue
+                            logger.info(f"[{account.account_id}] Liking community post {ct.tweet_id}")
+                            interaction_success = await engagement.like_tweet(ct.tweet_id, ct.tweet_url)
+                            metrics.log_event('community_like', 'success' if interaction_success else 'failure', {'tweet_id': ct.tweet_id})
+                            if interaction_success:
+                                metrics.increment('likes')
+                                self.file_handler.save_processed_action_key(action_key, timestamp=datetime.now().isoformat())
+                                self.processed_action_keys.add(action_key)
+                                total_community_actions += 1
+
+                        elif decided_action == "retweet" and current_action_config.enable_community_retweets:
+                            action_key = f"community_{decided_action}_{account.account_id}_{ct.tweet_id}"
+                            if action_key in self.processed_action_keys:
+                                continue
+                            logger.info(f"[{account.account_id}] Retweeting community post {ct.tweet_id}")
+                            interaction_success = await publisher.retweet_tweet(ct, quote_text_prompt_or_direct=None)
+                            metrics.log_event('community_retweet', 'success' if interaction_success else 'failure', {'tweet_id': ct.tweet_id})
+                            if interaction_success:
+                                metrics.increment('retweets')
+
+                            if interaction_success:
+                                self.file_handler.save_processed_action_key(action_key, timestamp=datetime.now().isoformat())
+                                self.processed_action_keys.add(action_key)
+                                total_community_actions += 1
+
+                        # Optional: Replies to community posts (independent gate and cap)
+                        if (
+                            current_action_config.enable_community_replies
+                            and replies_made_in_community < current_action_config.max_community_replies_per_run
+                        ):
+                            reply_key = f"community_reply_{account.account_id}_{ct.tweet_id}"
+                            if reply_key in self.processed_action_keys:
+                                # Already replied to this post in past runs
+                                pass
+                            else:
+                                # Respect recency window if configured
+                                try:
+                                    hours_limit = current_action_config.community_reply_only_recent_tweets_hours
+                                    if hours_limit and ct.created_at:
+                                        now_utc = datetime.now(timezone.utc)
+                                        age_hours = (now_utc - ct.created_at).total_seconds() / 3600
+                                        if age_hours > hours_limit:
+                                            logger.debug(f"[{account.account_id}] Skipping community reply for {ct.tweet_id}, age {age_hours:.1f}h > {hours_limit}h")
+                                            raise Exception("skip_reply_due_to_age")
+                                except Exception:
+                                    # Skip on explicit age failure; do not treat as error
+                                    pass
+                                else:
+                                    # Do not reply to own posts
+                                    if ct.user_handle and self._is_own_tweet(ct.user_handle, account, browser_manager):
+                                        logger.info(f"[{account.account_id}] Skipping own community post {ct.tweet_id} for reply.")
+                                        try:
+                                            skip_key = f"skip_own_{account.account_id}_{ct.tweet_id}"
+                                            self.file_handler.save_processed_action_key(skip_key, timestamp=datetime.now().isoformat())
+                                            self.processed_action_keys.add(skip_key)
+                                        except Exception:
+                                            pass
+                                        continue
+                                    # Generate a concise reply
+                                    reply_prompt = (
+                                        f"Write a concise, natural reply under 270 characters. Avoid hashtags, links, emojis.\n\n"
+                                        f"Original post by @{ct.user_handle or 'user'}:\n\"{ct.text_content}\"\n\nYour reply:"
+                                    )
+                                    logger.info(f"[{account.account_id}] Replying to community post {ct.tweet_id}")
+                                    generated_reply_text = await llm_service.generate_text(
+                                        prompt=reply_prompt,
+                                        service_preference=llm_for_reply.service_preference,
+                                        model_name=llm_for_reply.model_name_override,
+                                        max_tokens=llm_for_reply.max_tokens,
+                                        temperature=llm_for_reply.temperature,
+                                    )
+                                    generated_reply_text = (generated_reply_text or "")[:270].rstrip()
+                                    if generated_reply_text:
+                                        reply_success = await publisher.reply_to_tweet(ct, generated_reply_text)
+                                        metrics.log_event('community_reply', 'success' if reply_success else 'failure', {'tweet_id': ct.tweet_id})
+                                        if reply_success:
+                                            metrics.increment('replies')
+                                            self.file_handler.save_processed_action_key(reply_key, timestamp=datetime.now().isoformat())
+                                            self.processed_action_keys.add(reply_key)
+                                            replies_made_in_community += 1
+                                            total_community_actions += 1
+
+                        # Backoff between actions to be human-like
+                        if total_community_actions >= current_action_config.max_community_engagements_per_run:
+                            break
+                        await asyncio.sleep(random.uniform(current_action_config.min_delay_between_actions_seconds, current_action_config.max_delay_between_actions_seconds))
+
+                except Exception as e:
+                    logger.error(f"[{account.account_id}] Failed during community engagement: {e}", exc_info=True)
+                    metrics.increment('errors')
+
             # Action 2: Scrape keywords and reply
             target_keywords_for_account = account.target_keywords
             if current_action_config.enable_keyword_replies and target_keywords_for_account:
@@ -293,7 +460,7 @@ class TwitterOrchestrator:
                             logger.info(f"[{account.account_id}] Already replied or processed tweet {scraped_tweet_to_reply.tweet_id}. Skipping.")
                             continue
                         
-                        if current_action_config.avoid_replying_to_own_tweets and scraped_tweet_to_reply.user_handle and account.account_id.lower() in scraped_tweet_to_reply.user_handle.lower():
+                        if current_action_config.avoid_replying_to_own_tweets and scraped_tweet_to_reply.user_handle and self._is_own_tweet(scraped_tweet_to_reply.user_handle, account, browser_manager):
                             logger.info(f"[{account.account_id}] Skipping own tweet {scraped_tweet_to_reply.tweet_id} for reply.")
                             continue
 
@@ -399,6 +566,9 @@ class TwitterOrchestrator:
                                     continue
                         except Exception:
                             pass
+                        # Avoid retweeting own tweets
+                        if tweet_candidate.user_handle and self._is_own_tweet(tweet_candidate.user_handle, account, browser_manager):
+                            continue
                         interaction_success = await publisher.retweet_tweet(tweet_candidate)
                         if interaction_success:
                             retweets_made += 1
@@ -445,7 +615,7 @@ class TwitterOrchestrator:
                                 logger.info(f"[{account.account_id}] Already liked or processed tweet {tweet_to_like.tweet_id}. Skipping.")
                                 continue
                             
-                            if current_action_config.avoid_replying_to_own_tweets and tweet_to_like.user_handle and account.account_id.lower() in tweet_to_like.user_handle.lower():
+                            if current_action_config.avoid_replying_to_own_tweets and tweet_to_like.user_handle and self._is_own_tweet(tweet_to_like.user_handle, account, browser_manager):
                                 logger.info(f"[{account.account_id}] Skipping own tweet {tweet_to_like.tweet_id} for liking.")
                                 continue
 

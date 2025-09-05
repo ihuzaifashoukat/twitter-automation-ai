@@ -83,6 +83,36 @@ class ActionConfig(BaseModel): # This can be global or per-account
     decision_retweet_min: Optional[float] = Field(None, description="Relevance >= this triggers retweet.")
     decision_repost_min: Optional[float] = Field(None, description="Relevance >= this triggers repost; below becomes like.")
 
+    # Community engagement controls
+    enable_community_engagement: bool = Field(
+        False,
+        description="If true, the orchestrator will scrape the configured community and engage (like/retweet/quote/reply).",
+    )
+    enable_community_likes: bool = Field(
+        True,
+        description="If true, liking posts from the community is allowed.",
+    )
+    enable_community_retweets: bool = Field(
+        True,
+        description="If true, retweeting community posts is allowed (quotes are mapped to retweets).",
+    )
+    max_community_engagements_per_run: int = Field(
+        3,
+        description="Maximum total engagement actions (like/retweet/quote/reply) to perform from the community per run.",
+    )
+    enable_community_replies: bool = Field(
+        False,
+        description="If true, enables replying to a subset of community posts (subject to limits and relevance checks).",
+    )
+    max_community_replies_per_run: int = Field(
+        2,
+        description="Maximum replies to make to community posts per run (independent cap inside the total engagements).",
+    )
+    community_reply_only_recent_tweets_hours: Optional[int] = Field(
+        24,
+        description="Only reply to community posts newer than X hours; None for no age limit.",
+    )
+
 
 class AccountConfig(BaseModel):
     account_id: str # e.g., username or a unique ID
@@ -108,6 +138,12 @@ class AccountConfig(BaseModel):
     llm_settings_override: Optional[LLMSettings] = Field(None, description="General LLM settings override for this account.")
     # Account-specific action configurations (can include action-specific LLM settings)
     action_config: Optional[ActionConfig] = Field(None, description="Specific action configurations for this account. Overrides global action_config.")
+
+    # Optional: The actual X handle(s) for this account, used to avoid engaging own posts
+    self_handles: Optional[List[str]] = Field(
+        default=None,
+        description="Known handles for this logged-in account (e.g., ['myhandle']). Used to avoid engaging with own posts.",
+    )
 
     # Community posting controls
     post_to_community: bool = Field(default=False, description="If true, posts will be targeted to the specified community when composing.")

@@ -13,6 +13,19 @@ settings.json
   - response_interval_seconds: Base delay between actions.
   - media_directory: Folder for downloaded media.
   - processed_tweets_file: CSV for processed action keys.
+
+Community Engagement (in `twitter_automation.action_config` or per-account override)
+- enable_community_engagement: Enable engaging with posts from the configured `community_id` timeline.
+- enable_community_likes: Toggle liking community posts.
+- enable_community_retweets: Toggle retweeting community posts (quotes collapsed to retweet).
+- max_community_engagements_per_run: Cap on total community actions per run (like/retweet/quote/reply).
+- enable_community_replies: Enable generating and posting replies in the community.
+- max_community_replies_per_run: Cap for community replies per run.
+- community_reply_only_recent_tweets_hours: Optional age limit (in hours) for replying to community posts.
+
+Notes
+- Community engagement uses the same relevance and action decision heuristics configured in `engagement_decision` and the per-account `ActionConfig` thresholds. When the decision output is `repost`, the orchestrator maps it to a retweet for community posts.
+  - For cookie-based login, ensure JSON contains valid `auth_token` and `ct0` for the same domain as `cookie_domain_url`. If cookies are invalid/expired, set `browser_settings.login_wait_seconds` (e.g., 60–120) and complete manual login; the run will continue once signed-in is detected.
   - analysis_config
     - enable_relevance_filter: { competitor_reposts, likes, keyword_replies }
     - thresholds: { competitor_reposts_min, likes_min, keyword_replies_min? }
@@ -41,6 +54,7 @@ settings.json
   - use_undetected_chromedriver: bool (Chrome only)
   - enable_stealth: bool (Chrome only)
   - cookie_domain_url: base URL for cookie domain navigation (e.g., https://x.com)
+  - login_wait_seconds: Optional. If > 0, after applying cookies the browser opens X home and waits up to this many seconds for a signed-in state. Use this to complete manual login once when cookies are missing/expired.
   - chrome_driver_path / gecko_driver_path (optional): use a specific local driver binary. The app prefers local drivers if found.
 
 accounts.json (per account)

@@ -1,6 +1,6 @@
 {
   "api_keys": {
-    "gemini_api_key": "",
+    "gemini_api_key": "YOUR_GEMINI_API_KEY_HERE",
     "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
     "azure_openai_api_key": "YOUR_AZURE_OPENAI_API_KEY_HERE",
     "azure_openai_endpoint": "YOUR_AZURE_OPENAI_ENDPOINT_HERE",
@@ -86,6 +86,7 @@
     "window_size": "1920,1080",
     "use_undetected_chromedriver": true,
     "enable_stealth": false,
+    "login_wait_seconds": 60,
     "cookie_domain_url": "https://x.com",
     "driver_options": [
       "--no-sandbox",

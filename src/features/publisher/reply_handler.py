@@ -46,19 +46,37 @@ def reply_to_tweet(browser_manager: BrowserManager, original_tweet: ScrapedTweet
         logger.info(f"Clicked reply icon for tweet {original_tweet.tweet_id}.")
         time.sleep(2)
 
-        # Target the active reply modal/dialog
+        # Target the active reply modal/dialog (robust: allow inline composer fallback)
+        dialog = None
         try:
-            dialog = WebDriverWait(driver, 10).until(
+            dialog = WebDriverWait(driver, 12).until(
                 EC.presence_of_element_located((By.XPATH, "//div[@role='dialog' and @aria-modal='true']"))
             )
         except TimeoutException:
-            dialog = driver  # fallback to global scope if modal not detected
+            dialog = None
 
-        # Locate and type into the reply textarea strictly within the dialog
-        reply_text_area_xpath = ".//div[@data-testid='tweetTextarea_0' and @role='textbox']"
-        reply_text_area = WebDriverWait(dialog, 15).until(
-            EC.presence_of_element_located((By.XPATH, reply_text_area_xpath))
-        )
+        # Locate and type into the reply textarea; try within dialog first, then global fallback
+        reply_text_area = None
+        candidates = []
+        if dialog is not None:
+            candidates.append((dialog, ".//div[@data-testid='tweetTextarea_0' and @role='textbox']"))
+        # Global fallback in case modal wasn't detected or different structure
+        candidates.append((driver, "//div[@data-testid='tweetTextarea_0' and @role='textbox']"))
+        # Some variants omit role attr; include relaxed fallback
+        candidates.append((driver, "//div[@data-testid='tweetTextarea_0']"))
+
+        last_error = None
+        for scope, xpath in candidates:
+            try:
+                reply_text_area = WebDriverWait(scope, 18).until(
+                    EC.presence_of_element_located((By.XPATH, xpath))
+                )
+                break
+            except Exception as e:
+                last_error = e
+                continue
+        if not reply_text_area:
+            raise TimeoutException(f"Reply textarea not found. Last error: {last_error}")
         try:
             reply_text_area.click()
             reply_text_area.send_keys(Keys.CONTROL, "a")
@@ -78,13 +96,15 @@ def reply_to_tweet(browser_manager: BrowserManager, original_tweet: ScrapedTweet
         except Exception:
             pass
 
-        # Wait for the Reply button to become enabled within the dialog
+        # Wait for the Reply button to become enabled within the dialog (or global if dialog missing)
         def find_enabled_reply_button():
             try:
-                return dialog.find_element(
+                scope = dialog if dialog is not None else driver
+                btn = scope.find_element(
                     By.XPATH,
                     ".//button[@data-testid='tweetButton' and not(@disabled) and not(@aria-disabled='true')]",
                 )
+                return btn
             except Exception:
                 return None
 
@@ -107,13 +127,35 @@ def reply_to_tweet(browser_manager: BrowserManager, original_tweet: ScrapedTweet
             try:
                 reply_text_area.send_keys(Keys.CONTROL, Keys.ENTER)
                 # Confirm by waiting for dialog to close
-                if dialog is not driver:
+                if dialog is not None:
                     WebDriverWait(driver, 10).until(EC.staleness_of(dialog))
                 time.sleep(1)
                 return True
             except Exception as e:
-                logger.error(f"Failed to submit reply via keyboard fallback: {e}")
-                return False
+                logger.warning(f"Failed Ctrl+Enter submit attempt: {e}")
+                # Retry once: re-find dialog + textarea and try Enter
+                try:
+                    # Re-resolve dialog
+                    new_dialog = None
+                    try:
+                        new_dialog = WebDriverWait(driver, 6).until(
+                            EC.presence_of_element_located((By.XPATH, "//div[@role='dialog' and @aria-modal='true']"))
+                        )
+                    except Exception:
+                        new_dialog = None
+                    # Re-find textarea
+                    new_scope = new_dialog if new_dialog is not None else driver
+                    new_textarea = WebDriverWait(new_scope, 6).until(
+                        EC.presence_of_element_located((By.XPATH, "//div[@data-testid='tweetTextarea_0']"))
+                    )
+                    new_textarea.send_keys(Keys.ENTER)
+                    if new_dialog is not None:
+                        WebDriverWait(driver, 8).until(EC.staleness_of(new_dialog))
+                    time.sleep(0.8)
+                    return True
+                except Exception as e2:
+                    logger.error(f"Failed to submit reply via keyboard fallback: {e2}")
+                    return False
 
         # Click the enabled Reply button with fallbacks
         try:
@@ -147,7 +189,7 @@ def reply_to_tweet(browser_manager: BrowserManager, original_tweet: ScrapedTweet
 
         # Wait for dialog to close as a confirmation
         try:
-            if dialog is not driver:
+            if dialog is not None:
                 WebDriverWait(driver, 10).until(EC.staleness_of(dialog))
         except Exception:
             # Fallback tiny delay if staleness check is inconclusive

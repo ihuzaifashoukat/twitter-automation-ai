@@ -59,24 +59,28 @@ def parse_tweet_card(card_element: WebElement, logger: logging.Logger) -> Option
         try:
             user_name_element = card_element.find_element(By.XPATH, f".{X_USER_NAME_XPATH}")
             user_name = user_name_element.text if user_name_element else None
-        except NoSuchElementException:
+        except (NoSuchElementException, StaleElementReferenceException):
             pass
 
         user_handle = None
         try:
             user_handle_element = card_element.find_element(By.XPATH, f".{X_USER_HANDLE_XPATH}")
             user_handle = user_handle_element.text if user_handle_element else None
-        except NoSuchElementException:
+        except (NoSuchElementException, StaleElementReferenceException):
             pass
 
         tweet_text_parts: List[str] = []
-        text_elements = card_element.find_elements(By.XPATH, f".{X_TWEET_TEXT_XPATH}")
-        for el in text_elements:
-            try:
-                tweet_text_parts.append(el.text)
-            except StaleElementReferenceException:
-                logger.warning("Stale element reference when extracting tweet text part.")
-                continue
+        try:
+            text_elements = card_element.find_elements(By.XPATH, f".{X_TWEET_TEXT_XPATH}")
+            for el in text_elements:
+                try:
+                    tweet_text_parts.append(el.text)
+                except StaleElementReferenceException:
+                    logger.debug("Stale element reference when extracting tweet text part.")
+                    continue
+        except StaleElementReferenceException:
+            # Entire card went stale; skip quietly
+            return None
         text_content = "".join(tweet_text_parts).strip()
         if not text_content:
             return None
@@ -89,8 +93,8 @@ def parse_tweet_card(card_element: WebElement, logger: logging.Logger) -> Option
             if href and "/status/" in href:
                 tweet_url = href
                 tweet_id = href.split("/status/")[-1].split("?")[0]
-        except NoSuchElementException:
-            logger.warning("Could not find tweet link/ID element for a card.")
+        except (NoSuchElementException, StaleElementReferenceException):
+            logger.debug("Could not find tweet link/ID element for a card (missing or stale).")
             return None
 
         created_at_dt = None
@@ -99,7 +103,7 @@ def parse_tweet_card(card_element: WebElement, logger: logging.Logger) -> Option
             datetime_str = time_element.get_attribute("datetime")
             if datetime_str:
                 created_at_dt = datetime.fromisoformat(datetime_str.replace("Z", "+00:00"))
-        except NoSuchElementException:
+        except (NoSuchElementException, StaleElementReferenceException):
             logger.debug(f"Timestamp not found for tweet ID {tweet_id}")
 
         reply_count = _get_count(card_element, "reply")
@@ -122,7 +126,7 @@ def parse_tweet_card(card_element: WebElement, logger: logging.Logger) -> Option
         try:
             img_element = card_element.find_element(By.XPATH, f".{X_PROFILE_IMG_XPATH}")
             profile_image_url = img_element.get_attribute("src")
-        except NoSuchElementException:
+        except (NoSuchElementException, StaleElementReferenceException):
             pass
 
         embedded_media_urls: List[str] = []
@@ -136,7 +140,7 @@ def parse_tweet_card(card_element: WebElement, logger: logging.Logger) -> Option
         try:
             card_element.find_element(By.XPATH, f".{X_VERIFIED_ICON_SVG}")
             is_verified = True
-        except NoSuchElementException:
+        except (NoSuchElementException, StaleElementReferenceException):
             pass
 
         is_thread_candidate = False
@@ -165,6 +169,10 @@ def parse_tweet_card(card_element: WebElement, logger: logging.Logger) -> Option
             is_thread_candidate=is_thread_candidate,
         )
 
+    except StaleElementReferenceException:
+        # Dynamic DOM updates can stale cards mid-parse; skip without noise
+        logger.debug("Tweet card went stale during parsing; skipping.")
+        return None
     except Exception as e:  # Catch-all to avoid breaking the loop
         logger.error(f"Error parsing tweet card: {e}", exc_info=True)
         return None

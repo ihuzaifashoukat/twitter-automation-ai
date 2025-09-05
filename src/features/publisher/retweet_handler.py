@@ -41,12 +41,40 @@ def retweet_or_quote(
             EC.presence_of_element_located((By.XPATH, main_tweet_article_xpath))
         )
 
-        retweet_icon_button = WebDriverWait(main_tweet_element, 10).until(
-            EC.element_to_be_clickable((By.XPATH, ".//button[@data-testid='retweet']"))
-        )
-        retweet_icon_button.click()
+        # If already reposted, the action button is 'unretweet'. Treat as success.
+        try:
+            already_reposted_btn = WebDriverWait(main_tweet_element, 3).until(
+                EC.presence_of_element_located((By.XPATH, ".//button[@data-testid='unretweet']"))
+            )
+            if already_reposted_btn:
+                logger.info(f"Tweet {original_tweet.tweet_id} already reposted. Skipping confirm.")
+                return True
+        except TimeoutException:
+            pass
+
+        # Otherwise click the retweet (repost) icon
+        try:
+            retweet_icon_button = WebDriverWait(main_tweet_element, 8).until(
+                EC.element_to_be_clickable((By.XPATH, ".//button[@data-testid='retweet']"))
+            )
+        except TimeoutException:
+            # As a fallback, the button might be present but not immediately clickable; try presence then JS click
+            retweet_icon_button = WebDriverWait(main_tweet_element, 8).until(
+                EC.presence_of_element_located((By.XPATH, ".//button[@data-testid='retweet']"))
+            )
+        try:
+            try:
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", retweet_icon_button)
+            except Exception:
+                pass
+            retweet_icon_button.click()
+        except Exception:
+            try:
+                driver.execute_script("arguments[0].click();", retweet_icon_button)
+            except Exception:
+                pass
         logger.info(f"Clicked retweet icon for tweet {original_tweet.tweet_id}.")
-        time.sleep(1)
+        time.sleep(0.6)
 
         if is_quote_tweet:
             # Generic, resilient selection for quote option
@@ -84,15 +112,68 @@ def retweet_or_quote(
             post_button.click()
             logger.info("Clicked 'Post' for quote tweet.")
         else:
+            # Wait for either the confirm button inside Dropdown or the dropdown text fallbacks
+            confirm_retweet_button = None
+            last_error = None
+            for attempt in range(3):
+                dropdown = None
+                try:
+                    dropdown = WebDriverWait(driver, 6).until(
+                        EC.presence_of_element_located((By.XPATH, "//div[@data-testid='Dropdown' or @role='menu']"))
+                    )
+                except TimeoutException as e:
+                    last_error = e
+                # Preferred: explicit retweetConfirm within dropdown
+                if dropdown is not None and confirm_retweet_button is None:
+                    try:
+                        confirm_retweet_button = WebDriverWait(dropdown, 4).until(
+                            EC.element_to_be_clickable((By.XPATH, ".//*[@data-testid='retweetConfirm']"))
+                        )
+                    except TimeoutException as e:
+                        last_error = e
+                # Fallback: text contains Repost/Retweet
+                if confirm_retweet_button is None:
+                    try:
+                        confirm_retweet_button = WebDriverWait(driver, 4).until(
+                            EC.element_to_be_clickable((By.XPATH, "//div[@role='menu']//div[contains(., 'Repost')] | //div[@data-testid='Dropdown']//div[contains(., 'Repost')] | //div[@role='menu']//div[contains(., 'Retweet')]"))
+                        )
+                    except TimeoutException as e:
+                        last_error = e
+                if confirm_retweet_button:
+                    break
+                # If menu not found, retry the icon click
+                try:
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", retweet_icon_button)
+                except Exception:
+                    pass
+                try:
+                    retweet_icon_button.click()
+                except Exception:
+                    try:
+                        driver.execute_script("arguments[0].click();", retweet_icon_button)
+                    except Exception:
+                        pass
+                time.sleep(0.8)
+
+            if not confirm_retweet_button:
+                # Before failing, if the tweet now shows unretweet, consider it successful
+                try:
+                    WebDriverWait(main_tweet_element, 3).until(
+                        EC.presence_of_element_located((By.XPATH, ".//button[@data-testid='unretweet']"))
+                    )
+                    logger.info(f"Repost appears active for tweet {original_tweet.tweet_id} (unretweet visible).")
+                    return True
+                except TimeoutException:
+                    raise TimeoutException(f"Retweet confirm not found. Last error: {last_error}")
+
             try:
-                confirm_retweet_button = WebDriverWait(driver, 5).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='retweetConfirm']"))
-                )
-            except TimeoutException:
-                confirm_retweet_button = WebDriverWait(driver, 5).until(
-                    EC.element_to_be_clickable((By.XPATH, "//div[@role='menuitem' and contains(., 'Repost')]//div[1]"))
-                )
-            confirm_retweet_button.click()
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", confirm_retweet_button)
+            except Exception:
+                pass
+            try:
+                confirm_retweet_button.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", confirm_retweet_button)
             logger.info("Clicked 'Repost' (confirm retweet) option.")
 
         # Light backoff after action to avoid rapid-fire sequences

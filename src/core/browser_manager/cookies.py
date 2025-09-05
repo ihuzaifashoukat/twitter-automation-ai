@@ -51,20 +51,57 @@ def apply_cookies(driver: WebDriver, cookies: List[Dict[str, Any]], cookie_domai
 
     for cookie_dict in cookies:
         selenium_cookie: Dict[str, Any] = {}
+
+        # Normalize common export formats (e.g., from browser extensions)
+        # - "expirationDate" -> "expiry" (Selenium expects integer seconds)
+        # - map sameSite variants
+        # - strip unsupported fields
         for key, value in cookie_dict.items():
-            if key == 'expires':
-                selenium_cookie['expiry'] = value
+            if key in ('expires', 'expirationDate'):
+                try:
+                    # Many exports store float seconds; Selenium accepts int
+                    selenium_cookie['expiry'] = int(value)
+                except Exception:
+                    # Ignore invalid expiry; Selenium treats it as a session cookie
+                    pass
             elif key == 'httpOnly':
-                selenium_cookie['httpOnly'] = value
-            elif key in ['name', 'value', 'path', 'domain', 'secure', 'sameSite']:
+                selenium_cookie['httpOnly'] = bool(value)
+            elif key == 'sameSite':
+                # Accept common variants: Strict/Lax/None or "no_restriction" -> "None"
+                try:
+                    s = str(value).strip().lower()
+                except Exception:
+                    s = ''
+                mapped: Optional[str] = None
+                if s in ('none', 'no_restriction', 'no-restriction'):
+                    mapped = 'None'
+                elif s == 'lax':
+                    mapped = 'Lax'
+                elif s == 'strict':
+                    mapped = 'Strict'
+                # Only set if mapped to a valid Selenium value
+                if mapped:
+                    selenium_cookie['sameSite'] = mapped
+            elif key in ['name', 'value', 'path', 'domain', 'secure']:
                 selenium_cookie[key] = value
+            else:
+                # Ignore extraneous keys like hostOnly, session, storeId, etc.
+                continue
+
+        # Domain normalization: if cookies were exported for twitter.com, remap to x.com
+        dom = selenium_cookie.get('domain')
+        if isinstance(dom, str) and 'twitter.com' in dom:
+            try:
+                selenium_cookie['domain'] = dom.replace('twitter.com', 'x.com')
+            except Exception:
+                selenium_cookie['domain'] = '.x.com'
 
         if 'name' in selenium_cookie and 'value' in selenium_cookie:
             try:
                 driver.add_cookie(selenium_cookie)
             except InvalidArgumentException as iae:
                 logger.warning(
-                    f"Could not add cookie {selenium_cookie.get('name')} (often domain mismatch or expiry format): {iae}"
+                    f"Could not add cookie {selenium_cookie.get('name')} (often domain/sameSite/expiry mismatch): {iae}"
                 )
             except Exception as e:
                 logger.warning(
@@ -76,4 +113,3 @@ def apply_cookies(driver: WebDriver, cookies: List[Dict[str, Any]], cookie_domai
             driver.refresh()
         except Exception:
             pass
-

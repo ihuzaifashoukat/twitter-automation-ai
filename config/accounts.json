@@ -3,7 +3,7 @@
     "account_id": "tech_innovator_001",
     "is_active": true,
     "cookie_file_path": "config/dummy_cookies_example.json",
-    "proxy": "null",
+    "proxy": null,
     "post_to_community": true,
     "community_id": "1497313371053510658",
     "community_name": "One Piece",
@@ -14,9 +14,8 @@
       "Future of AI"
     ],
     "competitor_profiles_override": [
-      "https://x.com/OpenAI",
-      "https://x.com/DeepMind",
-      "https://x.com/MetaAI"
+      "https://x.com/OpenAI"
+
     ],
     "llm_settings_override": {
       "service_preference": "gemini",
@@ -51,7 +50,7 @@
       "decision_repost_min": 0.4,
       "llm_settings_for_post": {
         "service_preference": "gemini",
-        "model_name_override": "gemini-1.5-flash-latest",
+        "model_name_override": "gemini-2.5-flash",
         "max_tokens": 1000,
         "temperature": 0.72
       },
@@ -62,7 +61,14 @@
         "Large Language Models applications",
         "AI Ethics in practice",
         "Future of AI"
-      ]
+      ],
+      "enable_community_engagement": true,
+      "enable_community_likes": true,
+      "enable_community_retweets": true,
+      "max_community_engagements_per_run": 4,
+      "enable_community_replies": true,
+      "max_community_replies_per_run": 2,
+      "community_reply_only_recent_tweets_hours": 24
     }
   }
 

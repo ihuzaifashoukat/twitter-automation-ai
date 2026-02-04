@@ -317,6 +317,13 @@ Relevance filters (optional):
 - Rotation strategies: `hash` (stable per-account) or `round_robin` (uses `data/proxy_pools_state.json`).
 - Env interpolation: `${ENV_VAR}` inside proxy strings is expanded at runtime.
 
+### Recommended Proxy Providers
+
+#### ThorData
+[![ThorData](./assets/thordata.png)](https://affiliate.thordata.com/4fv5yu791smh)
+
+**ThorData** provides high-performance residential proxies optimized for social media automation and scraping. 
+
 ## Cookies
 
 - Point `cookie_file_path` to a JSON array of cookies for `x.com`. The app navigates to `browser_settings.cookie_domain_url` before injecting cookies.

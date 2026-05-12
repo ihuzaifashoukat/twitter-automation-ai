@@ -322,7 +322,7 @@ Relevance filters (optional):
 #### RapidProxy
 [RapidProxy](https://www.rapidproxy.io/?ref=aut)
 
-![RapidProxy Banner](https://ibb.co/2YWQTvJ5)
+![RapidProxy Banner](https://i.ibb.co/TqYSs4yr/image-10.png)
 
 Use RapidProxy for stable, high-performance proxy access in automation workflows. It offers dynamic and static residential proxies with free testing and unlimited, non-expiring traffic. Boost your Twitter automation performance with a consistent and secure proxy infrastructure.
 

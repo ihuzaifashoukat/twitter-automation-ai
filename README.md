@@ -319,10 +319,12 @@ Relevance filters (optional):
 
 ### Recommended Proxy Providers
 
-#### ThorData
-[![ThorData](./assets/thordata.png)](https://affiliate.thordata.com/4fv5yu791smh)
+#### RapidProxy
+[RapidProxy](https://www.rapidproxy.io/?ref=aut)
 
-**ThorData** provides high-performance residential proxies optimized for social media automation and scraping. 
+[RapidProxy Banner](https://ibb.co/2YWQTvJ5)
+
+Use RapidProxy for stable, high-performance proxy access in automation workflows. It offers dynamic and static residential proxies with free testing and unlimited, non-expiring traffic. Boost your Twitter automation performance with a consistent and secure proxy infrastructure.
 
 ## Cookies
 

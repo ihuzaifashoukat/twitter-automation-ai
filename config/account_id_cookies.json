@@ -1,0 +1,153 @@
+[
+  {
+    "domain": ".x.com",
+    "expirationDate": 1778587986.74518,
+    "httpOnly": true,
+    "name": "__cf_bm",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "Deahu33PdA8RlNJuJZ1ILl4PIS2ZklJpx017ikDsBLw-1778586199.7975054-1.0.1.1-RW_9ZThpuJpNo6klaZl8vYTEdMHRSQwa1C1SmsvAaMrd26msmO_8OwJWdlikV9u7VUkP7Te3UvXCB9sXTRwbKcGwuQqcf771NSNdQoPSLMI5K.sg0KFNxActHmv8kO.b"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1813145636,
+    "httpOnly": false,
+    "name": "__cuid",
+    "path": "/",
+    "sameSite": "lax",
+    "secure": false,
+    "value": "f572177637664696af25b1a6d1e4eae6"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1812070783.190357,
+    "httpOnly": true,
+    "name": "auth_token",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "c8220354389a91b60d59a7bd9d278a368910cfab"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1812070783.920283,
+    "httpOnly": false,
+    "name": "ct0",
+    "path": "/",
+    "sameSite": "lax",
+    "secure": true,
+    "value": "5dd52ddefb093b8a5ee92b39583178a3e0066b8884098e34aacecc54a4c143a9af3fed390a3c257e321e7216f2490e5b34df6df26360c3112d3bc5d9fdcb40dd2004b98bb151b5764499592535f3fd86"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1793236256.47388,
+    "httpOnly": false,
+    "name": "d_prefs",
+    "path": "/",
+    "sameSite": "unspecified",
+    "secure": true,
+    "value": "MjoxLGNvbnNlbnRfdmVyc2lvbjoyLHRleHRfdmVyc2lvbjoxMDAw"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1779063439.147794,
+    "httpOnly": false,
+    "name": "external_referer",
+    "path": "/",
+    "sameSite": "unspecified",
+    "secure": true,
+    "value": "padhuUp37zgr%2FU7qwifcQnFVO0ZOw7mq|0|8e8t2xd8A2w%3D"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1812070287.519252,
+    "httpOnly": false,
+    "name": "guest_id",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "v1%3A177751028741984132"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1813145613.871567,
+    "httpOnly": false,
+    "name": "guest_id_ads",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "v1%3A177751028741984132"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1813145613.872497,
+    "httpOnly": false,
+    "name": "guest_id_marketing",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "v1%3A177751028741984132"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1812070783.189472,
+    "httpOnly": true,
+    "name": "kdt",
+    "path": "/",
+    "sameSite": "unspecified",
+    "secure": true,
+    "value": "ubTVQK50Rs642y6aHWk37Oa8GpnEvcj5yhbFX390"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1810121637.154081,
+    "httpOnly": false,
+    "name": "night_mode",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "2"
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1812248222.344934,
+    "httpOnly": false,
+    "name": "personalization_id",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "\"v1_3tMP7LQYMq+1bVF6e9sduw==\""
+  },
+  {
+    "domain": ".x.com",
+    "expirationDate": 1810121956.954188,
+    "httpOnly": false,
+    "name": "twid",
+    "path": "/",
+    "sameSite": "no_restriction",
+    "secure": true,
+    "value": "u%3D1945253594942312448"
+  },
+  {
+    "domain": "x.com",
+    "expirationDate": 1793062615,
+    "hostOnly": true,
+    "httpOnly": false,
+    "name": "g_state",
+    "path": "/",
+    "sameSite": "unspecified",
+    "secure": false,
+    "value": "{\"i_l\":0,\"i_ll\":1777510615206,\"i_e\":{\"enable_itp_optimization\":0},\"i_et\":1777510301374,\"i_b\":\"PEs+OPamrGI8yEWvk5yPmapKhkZ6yqY6644/E8JvCLY\"}"
+  },
+  {
+    "domain": "x.com",
+    "hostOnly": true,
+    "httpOnly": false,
+    "name": "lang",
+    "path": "/",
+    "sameSite": "unspecified",
+    "secure": false,
+    "value": "en"
+  }
+]

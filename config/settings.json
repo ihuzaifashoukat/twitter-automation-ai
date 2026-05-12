@@ -79,7 +79,7 @@
   },
   "browser_settings": {
     "type": "firefox",
-    "headless": false,
+    "headless": true,
     "user_agent_generation": "random",
     "custom_user_agent": null,
     "proxy": null,
@@ -108,4 +108,4 @@
     "proxy_pool_strategy": "hash",
     "proxy_pool_state_file": "data/proxy_pools_state.json"
   }
-}
+  }

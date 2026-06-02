@@ -17,6 +17,7 @@
   - [Technology Stack](#technology-stack)
   - [Project Structure](#project-structure)
   - [Prerequisites](#prerequisites)
+  - [Recommended Proxy Providers](#recommended-proxy-providers)
   - [Setup and Configuration](#setup-and-configuration)
     - [1. Clone Repository](#1-clone-repository)
     - [2. Create Virtual Environment](#2-create-virtual-environment)
@@ -112,6 +113,45 @@ twitter-automation-ai/
 
 *   Python 3.9 or higher.
 *   A modern web browser (e.g., Chrome, Firefox) compatible with Selenium.
+
+---
+
+## Recommended Proxy Providers
+
+Twitter's per-IP detection kills automation at scale. Use a quality proxy provider to keep your multi-account setup running reliably. The providers below are tested and recommended.
+
+### ⭐ ScrapingAnt — Featured Provider
+
+Private residential network with premium grade IPs — not resold traffic. Supports sticky sessions required for Twitter's IP consistency checks.
+
+<table>
+<tr>
+<td align="center">
+<a href="https://scrapingant.com/residential-proxies?ref=mdkzote">
+<img src="https://i.ibb.co/mrK3tv4g/Screenshot-2026-05-08-at-14-17-29.png" alt="ScrapingAnt Residential Proxies" width="350" />
+</a>  <br/><a href="https://scrapingant.com/residential-proxies?ref=mdkzote">Top-notch, fast residential ScrapingAnt’s proxies for best performance</a>
+
+</td>
+<td align="center">
+<a href="https://scrapingant.com/datacenter-proxies?ref=mdkzote">
+<img src="https://i.ibb.co/ch0cFtPm/Screenshot-2026-05-08-at-14-17-46.png" alt="ScrapingAnt Datacenter Proxies" width="350" />
+</a>
+  <br/><a href="https://scrapingant.com/datacenter-proxies?ref=mdkzote">Affordable datacenter proxies for cost-effective operations</a>
+
+</td>
+</tr>
+</table>
+> 5% discount for twitter-automation-ai users — apply code `TWI_AUTO` at checkout.
+
+### RapidProxy
+
+[RapidProxy](https://www.rapidproxy.io/?ref=aut)
+
+<img src="https://i.ibb.co/TqYSs4yr/image-10.png" alt="RapidProxy Banner" width="300" />
+
+Dynamic and static residential proxies with free testing and unlimited, non-expiring traffic.
+
+---
 
 ## Setup and Configuration
 
@@ -263,12 +303,12 @@ To post into a community instead of your public timeline, set the following on t
   - `community_name`: fallback by the visible label in the audience picker
 
 How selection works:
-- The app opens the “Choose audience” control, locates the audience menu container (dialog or `data-testid="HoverCard"`), and attempts to click your community.
+- The app opens the "Choose audience" control, locates the audience menu container (dialog or `data-testid="HoverCard"`), and attempts to click your community.
 - It scrolls the virtualized list to reveal off-screen items and uses JS-click fallbacks to avoid overlay interception.
 - After selection, it posts using the chosen audience.
 
 If it fails to select your community:
-- Verify the account has joined the community and it appears under “My Communities”.
+- Verify the account has joined the community and it appears under "My Communities".
 - Provide a DOM snapshot from the audience menu in a GitHub issue so selectors can be tuned.
 
 ## Keyword Engagement
@@ -285,7 +325,7 @@ Relevance filters (optional):
 
 ## Troubleshooting
 
-- ElementClickInterceptedException or “not clickable”:
+- ElementClickInterceptedException or "not clickable":
   - The app automatically scrolls into view, waits for the composer mask to disappear, and uses JS-click or Ctrl+Enter fallbacks.
   - If it persists, consider adding small delays or switching to Chrome (`browser_settings.type: "chrome"`).
 
@@ -294,7 +334,7 @@ Relevance filters (optional):
   - The audience list is virtualized; the app scrolls within the menu to reveal items. If your UI differs, open an issue with a DOM snippet.
 
 - WebDriver downloads blocked or offline:
-  - The app prefers local drivers (`chromedriver`, `geckodriver`) if found in PATH or via `chrome_driver_path`/`gecko_driver_path`. Install via your OS package manager or ensure they’re in PATH.
+  - The app prefers local drivers (`chromedriver`, `geckodriver`) if found in PATH or via `chrome_driver_path`/`gecko_driver_path`. Install via your OS package manager or ensure they're in PATH.
 
 - Gemini errors (429/500):
   - Use `gemini-1.5-flash-latest`, reduce calls, or configure OpenAI/Azure.
@@ -316,15 +356,6 @@ Relevance filters (optional):
 - Per-account `proxy` overrides global. Use `"pool:<name>"` to select from `browser_settings.proxy_pools`.
 - Rotation strategies: `hash` (stable per-account) or `round_robin` (uses `data/proxy_pools_state.json`).
 - Env interpolation: `${ENV_VAR}` inside proxy strings is expanded at runtime.
-
-### Recommended Proxy Providers
-
-#### RapidProxy
-[RapidProxy](https://www.rapidproxy.io/?ref=aut)
-
-<img src="https://i.ibb.co/TqYSs4yr/image-10.png" alt="RapidProxy Banner" width="400" />
-
-Use RapidProxy for stable, high-performance proxy access in automation workflows. It offers dynamic and static residential proxies with free testing and unlimited, non-expiring traffic. Boost your Twitter automation performance with a consistent and secure proxy infrastructure.
 
 ## Cookies
 

@@ -1,0 +1,105 @@
+# Roadmap
+
+**twitter-automation-ai is becoming `x-use`** — browser-native AI agents for X (Twitter): multi-account, MCP-ready, no API keys required. The engine you know today (Selenium + LLM orchestration, per-account configs, proxies, metrics) stays the foundation. What changes in v2 is how you use it: an installable Python package, a proper CLI with a setup wizard, and an MCP server so Claude Desktop, Claude Code, Cursor, and other MCP clients can drive your X accounts directly. This roadmap is open to input — if you want to influence priorities, propose a tool, or challenge a decision, open an issue or start a discussion.
+
+Legend: `[x]` shipped · `[ ]` planned or in progress.
+
+---
+
+## Phase 1 — v2.0 "x-use" relaunch (in progress)
+
+The goal of v2.0: go from "clone the repo and run `python src/main.py`" to `pip install x-use`, a guided init, and first-class MCP support — without rewriting the engine.
+
+### Rebrand & packaging
+
+- [ ] Rename the GitHub repository `twitter-automation-ai` → `x-use` (stars, forks, and old URLs are preserved by GitHub redirects)
+- [ ] Add `pyproject.toml` and move the codebase into a src-layout package: `src/xuse/` (`xuse/core`, `xuse/features`, `xuse/utils`, `xuse/models`) — a structural move, not a rewrite; existing engine logic carries over
+- [ ] Raise the Python floor to 3.10+
+- [ ] Publish to PyPI as `x-use`
+
+### CLI (Typer)
+
+- [ ] `x-use init` — interactive wizard: add accounts, import cookies, set LLM keys, pick a starting preset (the existing `presets/settings/` and `presets/accounts/` templates become wizard choices)
+- [ ] `x-use run [--account NAME] [--pipeline ...]` — replaces `python src/main.py` as the way to run automation cycles
+- [ ] `x-use mcp` — start the MCP server
+- [ ] `x-use doctor` — environment checks: Chrome/driver availability, cookie validity, LLM key configuration, proxy reachability
+
+### MCP server (the Phase 1 flagship)
+
+- [ ] MCP server over stdio, built on the official MCP Python SDK — works with Claude Desktop, Claude Code, Cursor, and Windsurf out of the box
+- [ ] Tools wrapping the existing modules:
+  - [ ] `list_accounts()` — enumerate configured accounts
+  - [ ] `post_tweet(account, text, media?, community?)` — publish via the composer, including community posting
+  - [ ] `generate_and_post(account, topic)` — LLM content generation plus publish in one call
+  - [ ] `search_tweets(keywords, limit)` — keyword search via the scraper
+  - [ ] `reply_to_tweet(account, tweet_url, text | auto)` — manual or LLM-generated replies
+  - [ ] `engage(account, keywords, actions, max)` — likes / retweets / replies with per-call caps
+  - [ ] `run_cycle(account?, pipelines?)` — trigger a full orchestrator cycle
+  - [ ] `get_metrics(account)` — read per-account metrics summaries
+- [ ] **Draft / approval mode** — human-in-the-loop safety, on by default for MCP usage: write-tools return a draft object instead of posting; a separate `approve_draft(draft_id)` call executes it. Nothing goes live without an explicit approval unless you deliberately opt out
+- [ ] Lazy per-account browser session pool with idle timeout, so MCP calls stay fast and never hang the client
+
+### Config hygiene & docs
+
+- [ ] Ship `config/accounts.example.json` and stop tracking `config/accounts.json`; tighten `.gitignore` around cookies and `.env`
+- [ ] README relaunch: hero, 3-step quick start (`pip install x-use` → `x-use init` → paste the MCP snippet into your client config), comparison with API-based alternatives, demo GIF
+- [ ] Public `ARCHITECTURE.md` and `BEST_PRACTICES.md` (including a responsible-use section)
+- [ ] Submit to MCP directories (Smithery, LobeHub, community MCP lists) so `x-use` is discoverable where people look for MCP servers
+
+### Compatibility
+
+- [ ] Keep the legacy `python src/main.py` entry point working during a deprecation window (see [Versioning](#versioning))
+
+---
+
+## Phase 2 — v2.1 dashboard & deployment
+
+Once the package and MCP layer are solid, make the system observable and deployable.
+
+- [ ] FastAPI backend serving the data the engine already writes: `data/metrics/<account_id>.json` summaries and `logs/accounts/<account_id>.jsonl` event logs
+- [ ] Lightweight web UI:
+  - [ ] Draft-approval queue — review, edit, approve, or reject pending drafts from the browser
+  - [ ] Per-account metrics charts (posts, replies, retweets, quote tweets, likes, errors over time)
+  - [ ] Account status overview (last run, cookie health, active pipelines)
+- [ ] Official Docker image and a `docker compose` setup for running the engine, MCP server, and dashboard together
+- [ ] Dashboard-aware `x-use doctor` checks (port availability, data directory permissions)
+
+---
+
+## Phase 3 — v2.2+ extensibility
+
+Turn x-use from a tool into a platform you can extend without forking.
+
+- [ ] **Persona preset library** — curated, shareable persona/preset bundles (tone, cadence, engagement style) building on today's `presets/` system; contributed personas welcome
+- [ ] **Plugin system** — register custom pipelines and MCP tools from your own package, so niche workflows don't need to live in core
+- [ ] **Selector self-healing** — headless smoke tests in CI that detect X UI selector breakage early, plus fallback selector strategies, so UI changes get caught by automation instead of by your accounts
+- [ ] **Prometheus-compatible metrics endpoint** — scrape run counts, action outcomes, and error rates into Grafana or any Prometheus stack
+- [ ] Community persona and preset contributions folded into releases on a regular cadence
+
+---
+
+## How to help
+
+The fastest way to help right now:
+
+- **Selector fixes.** X changes its DOM regularly. PRs that update or harden selectors in `src/features/scraper/` and `src/features/publisher/` are the most valuable contributions this project gets — especially with a DOM snippet in the PR description showing what changed.
+- **Presets.** New account presets (`presets/accounts/`) and settings presets (`presets/settings/`) for real-world use cases — a good preset saves every new user an hour of configuration.
+- **Docs.** Clarify setup steps, add troubleshooting entries, improve `docs/CONFIG_REFERENCE.md`. If something confused you during setup, it confuses others too.
+- **MCP tool ideas.** Open an issue describing the tool call you wish existed (name, inputs, expected behavior). The Phase 1 tool list above is a starting set, not a ceiling.
+- **Testing.** pytest coverage for pure logic (config merging, dedup keys, LLM JSON parsing) and, once the MCP layer lands, tool contract tests.
+
+Look for issues labeled `good first issue` and `help wanted`. Before starting a large change, open an issue first so we can agree on the approach — see [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow.
+
+---
+
+## Versioning
+
+x-use follows [semantic versioning](https://semver.org/).
+
+- **v2.0.0** is a major release because it is a breaking restructure: the package moves to `src/xuse/`, imports change, and the primary entry point becomes the `x-use` CLI.
+- The legacy `python src/main.py` entry point is preserved through a deprecation window covering the v2.0.x series, with a warning pointing to `x-use run`. It will be removed no earlier than v2.1.
+- Config file formats (`config/settings.json`, `config/accounts.json`) remain compatible in v2.0; any future schema changes will ship with a migration note in the release notes.
+
+---
+
+*This roadmap reflects current intent, not a contract — priorities shift with feedback. Comment on the tracking issues for each phase, or open a discussion to propose something new.*

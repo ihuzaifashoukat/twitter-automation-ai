@@ -180,3 +180,11 @@ processed_tweets_log.csv
 *.bak
 *.swp
 *~
+
+# AI-assistant / internal planning docs (local-only, never commit)
+PRD.md
+AGENT.md
+AGENTS.md
+CLAUDE.md
+.claude/
+docs/superpowers/

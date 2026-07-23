@@ -1,6 +1,6 @@
 # Best Practices
 
-Operational guidance for running x-use (formerly `twitter-automation-ai`) safely and effectively. This document covers the current codebase — Python 3.9+, Selenium + LLM pipelines, run via `python src/main.py`, configured through JSON files in `config/`. Features from the roadmap that are not yet shipped are explicitly marked as planned.
+Operational guidance for running x-use (formerly `twitter-automation-ai`) safely and effectively. This document covers the current v2.0 codebase — Python 3.10+, Selenium + LLM pipelines, run via the `x-use` CLI (`x-use run`; the legacy `python src/main.py` shim still works), configured through JSON files in `config/`. Features from the roadmap that are not yet shipped are explicitly marked as planned.
 
 ## 1. Account Safety & Rate Limiting
 

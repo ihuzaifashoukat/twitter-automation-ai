@@ -6,7 +6,7 @@ Sections 1–5 describe the engine as it exists today, packaged under `src/xuse/
 
 ## 1. Overview
 
-x-use is a Python 3.9+ framework that automates X accounts through a real browser instead of the paid X API. It scrapes timelines and search results, uses LLMs to decide what is worth engaging with, generates content, and performs actions (post, reply, retweet, quote, like) through Selenium — all driven by JSON configuration.
+x-use is a Python 3.10+ framework that automates X accounts through a real browser instead of the paid X API. It scrapes timelines and search results, uses LLMs to decide what is worth engaging with, generates content, and performs actions (post, reply, retweet, quote, like) through Selenium — all driven by JSON configuration.
 
 Four principles shape the design:
 

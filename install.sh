@@ -101,13 +101,13 @@ info "git $(git --version | awk '{print $3}'), python ${PY_VERSION} - preflight 
 
 # --- repo: clone / update / in-place ---------------------------------------------
 
-if [[ -z "${INSTALL_DIR}" && -f "pyproject.toml" ]] && grep -q '^name = "x-use"' pyproject.toml 2>/dev/null; then
+if [[ -z "${INSTALL_DIR}" && -f "pyproject.toml" ]] && grep -q '^name = "x-use' pyproject.toml 2>/dev/null; then
     # Running from inside the repo: install in place.
     INSTALL_DIR="$(pwd)"
 fi
 INSTALL_DIR="${INSTALL_DIR:-${DEFAULT_DIR}}"
 
-if [[ -f "${INSTALL_DIR}/pyproject.toml" ]] && grep -q '^name = "x-use"' "${INSTALL_DIR}/pyproject.toml" 2>/dev/null; then
+if [[ -f "${INSTALL_DIR}/pyproject.toml" ]] && grep -q '^name = "x-use' "${INSTALL_DIR}/pyproject.toml" 2>/dev/null; then
     if [[ "${UPDATE}" -eq 1 ]]; then
         info "Updating existing clone in ${INSTALL_DIR} ..."
         git -C "${INSTALL_DIR}" pull --ff-only || warn "git pull failed - keeping the existing checkout."
@@ -120,7 +120,7 @@ else
     fi
     info "Cloning ${REPO_URL} -> ${INSTALL_DIR} ..."
     git clone --depth 1 "${REPO_URL}" "${INSTALL_DIR}"
-    [[ -f "${INSTALL_DIR}/pyproject.toml" ]] && grep -q '^name = "x-use"' "${INSTALL_DIR}/pyproject.toml" 2>/dev/null \
+    [[ -f "${INSTALL_DIR}/pyproject.toml" ]] && grep -q '^name = "x-use' "${INSTALL_DIR}/pyproject.toml" 2>/dev/null \
         || die "the clone does not look like x-use v2 (missing pyproject.toml). The default branch may predate the v2 merge - clone the right branch or set XUSE_REPO_URL."
 fi
 

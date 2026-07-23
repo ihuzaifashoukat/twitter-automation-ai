@@ -8,14 +8,14 @@ Legend: `[x]` shipped · `[ ]` planned or in progress.
 
 ## Phase 1 — v2.0 "x-use" relaunch (nearly complete — rename, PyPI publish, and directory submissions remain)
 
-The goal of v2.0: go from "clone the repo and run `python src/main.py`" to `pip install x-use`, a guided init, and first-class MCP support — without rewriting the engine.
+The goal of v2.0: go from "clone the repo and run `python src/main.py`" to `pip install x-use-mcp`, a guided init, and first-class MCP support — without rewriting the engine.
 
 ### Rebrand & packaging
 
 - [ ] Rename the GitHub repository `twitter-automation-ai` → `x-use` (stars, forks, and old URLs are preserved by GitHub redirects)
 - [x] Add `pyproject.toml` and move the codebase into a src-layout package: `src/xuse/` (`xuse/core`, `xuse/features`, `xuse/utils`, `xuse/models`) — a structural move, not a rewrite; existing engine logic carries over
 - [x] Raise the Python floor to 3.10+
-- [ ] Publish to PyPI as `x-use`
+- [ ] Publish to PyPI as `x-use-mcp` (the bare `x-use` name was rejected by PyPI as too similar to an existing `xuse` project)
 
 ### CLI (Typer)
 
@@ -42,7 +42,7 @@ The goal of v2.0: go from "clone the repo and run `python src/main.py`" to `pip 
 ### Config hygiene & docs
 
 - [x] Ship `config/accounts.example.json` and stop tracking `config/accounts.json`; tighten `.gitignore` around cookies and `.env`
-- [x] README relaunch: hero, 3-step quick start (`pip install x-use` → `x-use init` → paste the MCP snippet into your client config), comparison with API-based alternatives, demo GIF
+- [x] README relaunch: hero, 3-step quick start (one-line installer → `x-use init` → paste the MCP snippet into your client config), comparison with API-based alternatives, demo GIF
 - [x] Public `ARCHITECTURE.md` and `BEST_PRACTICES.md` (including a responsible-use section)
 - [ ] Submit to MCP directories (Smithery, LobeHub, community MCP lists) so `x-use` is discoverable where people look for MCP servers
 

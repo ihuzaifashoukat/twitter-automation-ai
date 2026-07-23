@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/x-use
+      url: https://pypi.org/p/x-use-mcp
     permissions:
       id-token: write
     steps:

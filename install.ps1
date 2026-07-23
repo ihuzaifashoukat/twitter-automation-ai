@@ -87,7 +87,7 @@ Write-Info "git $gitVersion, python $pyVersion - preflight OK."
 function Test-XUseCheckout([string]$Path) {
     $pyproject = Join-Path $Path "pyproject.toml"
     if (-not (Test-Path $pyproject)) { return $false }
-    return [bool](Select-String -Path $pyproject -Pattern '^name = "x-use"' -Quiet)
+    return [bool](Select-String -Path $pyproject -Pattern '^name = "x-use' -Quiet)
 }
 
 if (-not $Dir -and (Test-XUseCheckout (Get-Location).Path)) {

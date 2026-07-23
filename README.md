@@ -43,7 +43,7 @@ cd x-use
 pip install -e .
 ```
 
-Requires Python 3.10+ and Chrome. Any of these gives you the `x-use` command. PyPI publishing (`pip install x-use`) is on the roadmap.
+Requires Python 3.10+ and Chrome. Any of these gives you the `x-use` command. PyPI publishing (`pip install x-use-mcp`) is on the roadmap.
 
 ## Set up
 

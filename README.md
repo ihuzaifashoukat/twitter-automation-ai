@@ -58,7 +58,21 @@ Dynamic and static residential proxies with free testing and unlimited, non-expi
 
 ### 1. Install
 
-PyPI publishing (`pip install x-use`) is coming with the v2.0 release — for now, install from the repo:
+PyPI publishing (`pip install x-use`) is coming with the v2.0 release. Until then, the installer is the fastest way in: one command clones the repo, installs x-use into its own virtual environment, and finishes with `x-use doctor` so you can see what is left to configure.
+
+Windows (PowerShell):
+
+```powershell
+iex "& { $(irm https://raw.githubusercontent.com/ihuzaifashoukat/x-use/main/install.ps1) }"
+```
+
+macOS / Linux / Git Bash:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ihuzaifashoukat/x-use/main/install.sh | bash
+```
+
+Or the manual way:
 
 ```bash
 git clone https://github.com/ihuzaifashoukat/x-use.git
@@ -66,7 +80,7 @@ cd x-use
 pip install -e .
 ```
 
-Requires Python 3.10+ and Chrome. This gives you the `x-use` command. (An editable install also anchors config resolution to the cloned repo, so `config/` is found from anywhere.)
+Requires Python 3.10+ and Chrome. Any of these gives you the `x-use` command. (An editable install also anchors config resolution to the cloned repo, so `config/` is found from anywhere.)
 
 ### 2. Configure
 

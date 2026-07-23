@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Shell scripts must always use LF, even on Windows checkouts — CRLF breaks bash.
+*.sh text eol=lf

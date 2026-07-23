@@ -15,7 +15,7 @@ The X API's pricing tiers put write access out of reach for exactly the people w
 [![Forks](https://img.shields.io/github/forks/ihuzaifashoukat/x-use)](https://github.com/ihuzaifashoukat/x-use/network/members)
 [![Stars](https://img.shields.io/github/stars/ihuzaifashoukat/x-use)](https://github.com/ihuzaifashoukat/x-use/stargazers)
 
-<!-- DEMO GIF PLACEHOLDER: record `x-use init` → paste MCP snippet → draft → approve_draft, then embed the GIF here. -->
+<!-- DEMO GIF PLACEHOLDER: record `x-use init`, paste the MCP snippet, make a draft, approve it, then embed the GIF here. -->
 
 ---
 

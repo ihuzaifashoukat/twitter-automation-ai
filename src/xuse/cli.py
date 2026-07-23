@@ -130,3 +130,7 @@ def doctor():
     """Environment checks: browser/driver, cookies, LLM keys, proxies."""
     from xuse.doctor import run_checks
     raise typer.Exit(run_checks())
+
+
+if __name__ == "__main__":
+    app()

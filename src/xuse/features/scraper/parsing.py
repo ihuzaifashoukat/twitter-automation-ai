@@ -7,10 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 
-try:
-    from ...data_models import ScrapedTweet
-except Exception:  # pragma: no cover - fallback when running directly
-    from xuse.models import ScrapedTweet  # type: ignore
+from ...models import ScrapedTweet
 
 from .selectors import (
     THREAD_INDICATORS,

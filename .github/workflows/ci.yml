@@ -30,5 +30,14 @@ jobs:
         run: |
           python -c "import xuse, xuse.orchestrator, xuse.features.publisher.composer; print('import smoke ok')"
 
+      - name: Gitignore invariants (secrets stay untracked, presets stay tracked)
+        run: |
+          git check-ignore -q config/accounts.json
+          git check-ignore -q config/anything_cookies.json
+          ! git check-ignore -q data/cookies/dummy_cookies_example.json
+          git ls-files presets/ | grep -q 'presets/accounts/growth.json'
+          git ls-files config/ | grep -q 'config/accounts.example.json'
+          ! git ls-files config/ | grep -qx 'config/accounts.json'
+
       - name: Run tests
         run: pytest -q

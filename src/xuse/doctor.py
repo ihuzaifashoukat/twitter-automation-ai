@@ -271,6 +271,8 @@ def _check_proxies(loader: ConfigLoader, accounts: List[Dict[str, Any]]) -> List
 
 def run_checks() -> int:
     """Run all checks, print the table, return process exit code."""
+    from xuse.utils.env import load_env
+    load_env()  # make .env-provided LLM keys visible to the checks below
     loader = ConfigLoader()
     settings = loader.get_settings() or {}
     accounts = loader.get_accounts_config() or []

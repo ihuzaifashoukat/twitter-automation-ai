@@ -172,16 +172,21 @@ config/accounts.json
 # Project specific
 media_files/
 processed_tweets_log.csv
+
+# Real cookie/session files (tracked dummy examples stay committed)
 *.cookie
-*.json # If other json files with sensitive data might be created, otherwise be more specific
-# Example: cookies_*.json
+*.cookies.json
+config/*_cookies.json
+config/cookies/
+data/cookies/*.json
+!data/cookies/dummy_cookies_example.json
 
 # Backup files
 *.bak
 *.swp
 *~
 
-# AI-assistant / internal planning docs (local-only, never commit)
+# Internal working docs (local-only, never commit)
 PRD.md
 AGENT.md
 AGENTS.md

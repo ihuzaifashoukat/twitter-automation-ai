@@ -1,0 +1,69 @@
+[
+  {
+    "account_id": "your_account_id_here",
+    "is_active": false,
+    "cookie_file_path": "data/cookies/your_cookies.json",
+    "proxy": null,
+    "post_to_community": false,
+    "community_id": "0000000000000000000",
+    "community_name": "Your Community Name",
+    "target_keywords_override": [
+      "example keyword one",
+      "example keyword two"
+    ],
+    "competitor_profiles_override": [
+      "https://x.com/example_profile"
+    ],
+    "llm_settings_override": {
+      "service_preference": "gemini",
+      "model_name_override": "gemini-2.5-flash",
+      "max_tokens": 1000,
+      "temperature": 0.7
+    },
+    "action_config_override": {
+      "min_delay_between_actions_seconds": 90,
+      "max_delay_between_actions_seconds": 240,
+      "enable_competitor_reposts": true,
+      "max_posts_per_competitor_run": 1,
+      "competitor_post_interaction_type": "repost",
+      "min_likes_for_repost_candidate": 20,
+      "min_retweets_for_repost_candidate": 5,
+      "enable_thread_analysis": true,
+      "enable_liking_tweets": true,
+      "max_likes_per_run": 5,
+      "like_tweets_from_feed": false,
+      "enable_keyword_replies": true,
+      "enable_content_curation_posts": true,
+      "enable_relevance_filter_competitor_reposts": true,
+      "relevance_threshold_competitor_reposts": 0.45,
+      "enable_relevance_filter_likes": true,
+      "relevance_threshold_likes": 0.35,
+      "enable_relevance_filter_keyword_replies": false,
+      "relevance_threshold_keyword_replies": 0.6,
+      "enable_engagement_decision": false,
+      "use_sentiment_in_decision": true,
+      "decision_quote_min": 0.8,
+      "decision_retweet_min": 0.55,
+      "decision_repost_min": 0.4,
+      "llm_settings_for_post": {
+        "service_preference": "gemini",
+        "model_name_override": "gemini-2.5-flash",
+        "max_tokens": 1000,
+        "temperature": 0.72
+      },
+      "enable_keyword_retweets": true,
+      "max_retweets_per_keyword_run": 1,
+      "like_tweets_from_keywords": [
+        "example keyword one",
+        "example keyword two"
+      ],
+      "enable_community_engagement": true,
+      "enable_community_likes": true,
+      "enable_community_retweets": true,
+      "max_community_engagements_per_run": 4,
+      "enable_community_replies": true,
+      "max_community_replies_per_run": 2,
+      "community_reply_only_recent_tweets_hours": 24
+    }
+  }
+]

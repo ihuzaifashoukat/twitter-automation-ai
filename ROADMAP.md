@@ -6,49 +6,49 @@ Legend: `[x]` shipped · `[ ]` planned or in progress.
 
 ---
 
-## Phase 1 — v2.0 "x-use" relaunch (in progress)
+## Phase 1 — v2.0 "x-use" relaunch (nearly complete — rename, PyPI publish, and directory submissions remain)
 
 The goal of v2.0: go from "clone the repo and run `python src/main.py`" to `pip install x-use`, a guided init, and first-class MCP support — without rewriting the engine.
 
 ### Rebrand & packaging
 
 - [ ] Rename the GitHub repository `twitter-automation-ai` → `x-use` (stars, forks, and old URLs are preserved by GitHub redirects)
-- [ ] Add `pyproject.toml` and move the codebase into a src-layout package: `src/xuse/` (`xuse/core`, `xuse/features`, `xuse/utils`, `xuse/models`) — a structural move, not a rewrite; existing engine logic carries over
-- [ ] Raise the Python floor to 3.10+
+- [x] Add `pyproject.toml` and move the codebase into a src-layout package: `src/xuse/` (`xuse/core`, `xuse/features`, `xuse/utils`, `xuse/models`) — a structural move, not a rewrite; existing engine logic carries over
+- [x] Raise the Python floor to 3.10+
 - [ ] Publish to PyPI as `x-use`
 
 ### CLI (Typer)
 
-- [ ] `x-use init` — interactive wizard: add accounts, import cookies, set LLM keys, pick a starting preset (the existing `presets/settings/` and `presets/accounts/` templates become wizard choices)
-- [ ] `x-use run [--account NAME] [--pipeline ...]` — replaces `python src/main.py` as the way to run automation cycles
-- [ ] `x-use mcp` — start the MCP server
-- [ ] `x-use doctor` — environment checks: Chrome/driver availability, cookie validity, LLM key configuration, proxy reachability
+- [x] `x-use init` — interactive wizard: add accounts, import cookies, set LLM keys, pick a starting preset (the existing `presets/settings/` and `presets/accounts/` templates become wizard choices)
+- [x] `x-use run [--account NAME] [--pipeline ...]` — replaces `python src/main.py` as the way to run automation cycles
+- [x] `x-use mcp` — start the MCP server
+- [x] `x-use doctor` — environment checks: Chrome/driver availability, cookie validity, LLM key configuration, proxy reachability
 
 ### MCP server (the Phase 1 flagship)
 
-- [ ] MCP server over stdio, built on the official MCP Python SDK — works with Claude Desktop, Claude Code, Cursor, and Windsurf out of the box
-- [ ] Tools wrapping the existing modules:
-  - [ ] `list_accounts()` — enumerate configured accounts
-  - [ ] `post_tweet(account, text, media?, community?)` — publish via the composer, including community posting
-  - [ ] `generate_and_post(account, topic)` — LLM content generation plus publish in one call
-  - [ ] `search_tweets(keywords, limit)` — keyword search via the scraper
-  - [ ] `reply_to_tweet(account, tweet_url, text | auto)` — manual or LLM-generated replies
-  - [ ] `engage(account, keywords, actions, max)` — likes / retweets / replies with per-call caps
-  - [ ] `run_cycle(account?, pipelines?)` — trigger a full orchestrator cycle
-  - [ ] `get_metrics(account)` — read per-account metrics summaries
-- [ ] **Draft / approval mode** — human-in-the-loop safety, on by default for MCP usage: write-tools return a draft object instead of posting; a separate `approve_draft(draft_id)` call executes it. Nothing goes live without an explicit approval unless you deliberately opt out
-- [ ] Lazy per-account browser session pool with idle timeout, so MCP calls stay fast and never hang the client
+- [x] MCP server over stdio, built on the official MCP Python SDK — works with Claude Desktop, Claude Code, Cursor, and Windsurf out of the box
+- [x] Tools wrapping the existing modules:
+  - [x] `list_accounts()` — enumerate configured accounts
+  - [x] `post_tweet(account, text, media?, community?)` — publish via the composer, including community posting
+  - [x] `generate_and_post(account, topic)` — LLM content generation plus publish in one call
+  - [x] `search_tweets(keywords, limit)` — keyword search via the scraper
+  - [x] `reply_to_tweet(account, tweet_url, text | auto)` — manual or LLM-generated replies
+  - [x] `engage(account, keywords, actions, max)` — likes / retweets / replies with per-call caps
+  - [x] `run_cycle(account?, pipelines?)` — trigger a full orchestrator cycle
+  - [x] `get_metrics(account)` — read per-account metrics summaries
+- [x] **Draft / approval mode** — human-in-the-loop safety, on by default for MCP usage: write-tools return a draft object instead of posting; a separate `approve_draft(draft_id)` call executes it. Nothing goes live without an explicit approval unless you deliberately opt out
+- [x] Lazy per-account browser session pool with idle timeout, so MCP calls stay fast and never hang the client
 
 ### Config hygiene & docs
 
-- [ ] Ship `config/accounts.example.json` and stop tracking `config/accounts.json`; tighten `.gitignore` around cookies and `.env`
-- [ ] README relaunch: hero, 3-step quick start (`pip install x-use` → `x-use init` → paste the MCP snippet into your client config), comparison with API-based alternatives, demo GIF
-- [ ] Public `ARCHITECTURE.md` and `BEST_PRACTICES.md` (including a responsible-use section)
+- [x] Ship `config/accounts.example.json` and stop tracking `config/accounts.json`; tighten `.gitignore` around cookies and `.env`
+- [x] README relaunch: hero, 3-step quick start (`pip install x-use` → `x-use init` → paste the MCP snippet into your client config), comparison with API-based alternatives, demo GIF
+- [x] Public `ARCHITECTURE.md` and `BEST_PRACTICES.md` (including a responsible-use section)
 - [ ] Submit to MCP directories (Smithery, LobeHub, community MCP lists) so `x-use` is discoverable where people look for MCP servers
 
 ### Compatibility
 
-- [ ] Keep the legacy `python src/main.py` entry point working during a deprecation window (see [Versioning](#versioning))
+- [x] Keep the legacy `python src/main.py` entry point working during a deprecation window (see [Versioning](#versioning))
 
 ---
 

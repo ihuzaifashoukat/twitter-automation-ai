@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "x-use"
+version = "2.0.0"
+description = "Browser-native AI agents for X (Twitter): multi-account, MCP-ready, no API keys required."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Huzaifa Shoukat"},
+]
+keywords = ["mcp", "twitter", "x", "ai-agent", "browser-automation", "selenium", "llm", "claude"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "selenium",
+    "webdriver-manager",
+    "fake-headers",
+    "pydantic",
+    "langchain-google-genai",
+    "openai",
+    "requests",
+    "python-dotenv",
+    "undetected-chromedriver",
+    "selenium-stealth",
+    "typer>=0.12",
+    "mcp>=1,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.scripts]
+x-use = "xuse.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]

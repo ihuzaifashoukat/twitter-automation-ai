@@ -5,12 +5,12 @@ Pool state files are redirected into tmp_path by configuring
 path onto PROJECT_ROOT yields the absolute path), so the real repo data/ dir
 is never written.
 
-Note on the hash strategy: it pins accounts via ``abs(hash(account_id))``.
-Python randomizes str hashing per process (PYTHONHASHSEED), so the pinning is
-stable within a process but not across restarts — the tests assert the
-in-process contract only.
+Note on the hash strategy: it pins accounts via
+``sha256(account_id) mod len(pool)`` — stable across process restarts, unlike
+builtin ``hash()`` which is salted per process (PYTHONHASHSEED).
 """
 
+import hashlib
 import json
 
 import pytest
@@ -78,8 +78,14 @@ class TestHashStrategy:
     def test_choice_matches_deterministic_hash_formula(self, make_proxy_manager):
         manager = make_proxy_manager()
         for account_id in ("alpha", "beta", "gamma"):
-            expected = POOL[abs(hash(account_id)) % len(POOL)]
-            assert manager.resolve("pool:resi", account_id=account_id) == expected
+            idx = int(hashlib.sha256(account_id.encode("utf-8")).hexdigest(), 16) % len(POOL)
+            assert manager.resolve("pool:resi", account_id=account_id) == POOL[idx]
+
+    def test_pinning_is_stable_across_hash_seeds(self, make_proxy_manager):
+        """Hardcoded expectation: sha256('account-xyz') % 3 == 2. A salted
+        builtin hash() would only pass this by chance (1/3 per process)."""
+        manager = make_proxy_manager()
+        assert manager.resolve("pool:resi", account_id="account-xyz") == POOL[2]
 
     def test_no_account_id_falls_back_to_first_pool_member(self, make_proxy_manager):
         manager = make_proxy_manager()

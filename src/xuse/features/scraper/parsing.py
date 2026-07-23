@@ -26,17 +26,29 @@ from .selectors import (
 )
 
 
+_COUNT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*([kKmM])?")
+
+
 def _parse_int_from_text(text: str) -> int:
+    """Parse an engagement count like '1,234', '1.5K', or '3k' into an int.
+
+    Tolerates thousands separators and case-insensitive K/M suffixes; returns
+    0 when no number is present.
+    """
     if not text:
         return 0
-    text = text.strip()
+    match = _COUNT_RE.search(text.strip().replace(",", ""))
+    if not match:
+        return 0
     try:
-        if "K" in text:
-            return int(float(text.replace("K", "")) * 1000)
-        if "M" in text:
-            return int(float(text.replace("M", "")) * 1_000_000)
-        return int(text)
-    except Exception:
+        value = float(match.group(1))
+        suffix = (match.group(2) or "").lower()
+        if suffix == "k":
+            value *= 1_000
+        elif suffix == "m":
+            value *= 1_000_000
+        return int(value)
+    except (ValueError, OverflowError):
         return 0
 
 

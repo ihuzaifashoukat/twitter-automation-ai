@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 from typing import Optional, Dict, Any, List
@@ -68,9 +69,12 @@ class ProxyManager:
                 state[pool_name] = (pool_idx + 1) % len(pool)
                 self._save_state(state)
             else:
-                # Deterministic pick per account for stability; fallback to first
+                # Deterministic pick per account for stability; fallback to first.
+                # hashlib (not builtin hash) so pinning survives process restarts —
+                # builtin str hashing is salted per process (PYTHONHASHSEED).
                 if account_id:
-                    idx = abs(hash(account_id)) % len(pool)
+                    digest = hashlib.sha256(account_id.encode("utf-8")).hexdigest()
+                    idx = int(digest, 16) % len(pool)
                     choice = pool[idx]
                 else:
                     choice = pool[0]

@@ -1,19 +1,11 @@
-"""Tests for processed-action-key dedup in xuse.utils.file_handler.FileHandler.
-
-Note: FileHandler resolves its CSV path via
-``config_loader.get_twitter_automation_setting("", {})`` — the empty setting
-name produces the path "twitter_automation." which never resolves, so the
-configured ``processed_tweets_file`` is currently ignored and the path always
-defaults to PROJECT_ROOT/'processed_tweets_log.csv'. Tests therefore override
-``processed_tweets_file_path`` with a tmp_path location (the same pattern the
-module's own __main__ demo uses) to keep the real repo data/ dir untouched.
-"""
+"""Tests for processed-action-key dedup in xuse.utils.file_handler.FileHandler."""
 
 import csv
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from xuse.core.config_loader import PROJECT_ROOT
 from xuse.utils.file_handler import FileHandler
 
 
@@ -22,6 +14,24 @@ def file_handler(make_config_loader, tmp_path):
     handler = FileHandler(make_config_loader())
     handler.processed_tweets_file_path = tmp_path / "processed_tweets_log.csv"
     return handler
+
+
+class TestConfiguredPath:
+    """FileHandler must honor twitter_automation.processed_tweets_file."""
+
+    def test_configured_relative_path_resolves_under_project_root(self, make_config_loader):
+        handler = FileHandler(make_config_loader(
+            settings={"twitter_automation": {"processed_tweets_file": "data/custom_log.csv"}}
+        ))
+        assert handler.processed_tweets_file_path == PROJECT_ROOT / "data/custom_log.csv"
+
+    def test_default_path_when_not_configured(self, make_config_loader):
+        handler = FileHandler(make_config_loader(settings={"twitter_automation": {}}))
+        assert handler.processed_tweets_file_path == PROJECT_ROOT / "processed_tweets_log.csv"
+
+    def test_non_dict_twitter_automation_block_falls_back(self, make_config_loader):
+        handler = FileHandler(make_config_loader(settings={"twitter_automation": "bogus"}))
+        assert handler.processed_tweets_file_path == PROJECT_ROOT / "processed_tweets_log.csv"
 
 
 def _now_utc_iso() -> str:

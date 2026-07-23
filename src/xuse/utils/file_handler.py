@@ -32,7 +32,12 @@ class FileHandler:
         else:
             self.config_loader = config_loader
         
-        self.twitter_auto_settings: Dict[str, Any] = self.config_loader.get_twitter_automation_setting("", {})
+        # Read the whole twitter_automation block. (An empty setting name here
+        # would build the path "twitter_automation." and never resolve.)
+        twitter_auto_settings = self.config_loader.get_setting('twitter_automation', {})
+        self.twitter_auto_settings: Dict[str, Any] = (
+            twitter_auto_settings if isinstance(twitter_auto_settings, dict) else {}
+        )
         
         # Get processed_tweets_file path from config, default if not found
         processed_tweets_file_rel_path = self.twitter_auto_settings.get('processed_tweets_file', 'processed_tweets_log.csv')

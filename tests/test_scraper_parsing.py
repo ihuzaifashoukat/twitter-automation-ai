@@ -107,10 +107,11 @@ class TestParseIntFromText:
             ("", 0),
             (None, 0),
             ("abc", 0),
-            # Current limitations (characterization): lowercase suffixes and
-            # thousands separators are not parsed.
-            ("3k", 0),
-            ("1,234", 0),
+            # Lowercase suffixes and thousands separators parse fine.
+            ("3k", 3000),
+            ("2.5m", 2_500_000),
+            ("1,234", 1234),
+            ("1,234.5K", 1_234_500),
         ],
     )
     def test_count_parsing(self, raw, expected):

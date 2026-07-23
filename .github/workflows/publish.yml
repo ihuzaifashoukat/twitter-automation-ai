@@ -1,0 +1,58 @@
+name: Publish to PyPI
+
+# Publishes the package when a GitHub release is created. Uses PyPI trusted
+# publishing (OIDC): no API tokens are stored anywhere. The matching pending
+# publisher on pypi.org must be: repo ihuzaifashoukat/x-use, workflow
+# publish.yml, environment pypi.
+#
+# Release rule: the version in pyproject.toml must be bumped before tagging;
+# the uploaded files take their version from there.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Check distributions
+        run: |
+          python -m pip install --upgrade twine
+          python -m twine check --strict dist/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/x-use
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

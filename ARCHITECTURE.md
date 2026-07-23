@@ -2,7 +2,7 @@
 
 This document describes the architecture of **x-use** (formerly `twitter-automation-ai`): browser-native AI agents for X (Twitter) — multi-account, MCP-ready, no API keys required.
 
-The project is mid-rebrand. Everything in sections 1–5 describes the code that exists today (the v1.x engine, run via `python src/main.py`). Section 6 describes the **v2.0 target architecture** — packaging, CLI, and MCP server — which is planned and in progress, not yet shipped.
+Sections 1–5 describe the engine as it exists today, packaged under `src/xuse/` since v2.0. Section 6 describes the v2.0 packaging, CLI, and MCP layer, which shipped with the rebrand; section 6.3 covers what is still planned.
 
 ## 1. Overview
 
@@ -26,19 +26,19 @@ flowchart TD
         A4["environment variables<br/>(${VAR} in proxy strings)"]
     end
 
-    subgraph ORCH["Orchestrator — src/main.py"]
+    subgraph ORCH["Orchestrator — src/xuse/orchestrator.py"]
         O1["TwitterOrchestrator"]
         O2["asyncio.gather — one task per account"]
     end
 
     subgraph ACCT["Per-account stack (isolated per task)"]
-        B1["BrowserManager<br/>src/core/browser_manager/<br/>Selenium · undetected-chromedriver ·<br/>selenium-stealth · proxy resolution"]
-        B2["LLMService<br/>src/core/llm_service/<br/>OpenAI · Azure OpenAI · Gemini<br/>structured JSON prompts"]
+        B1["BrowserManager<br/>src/xuse/core/browser_manager/<br/>Selenium · undetected-chromedriver ·<br/>selenium-stealth · proxy resolution"]
+        B2["LLMService<br/>src/xuse/core/llm_service/<br/>OpenAI · Azure OpenAI · Gemini<br/>structured JSON prompts"]
         subgraph FEAT["Features"]
-            F1["TweetScraper<br/>src/features/scraper/"]
-            F2["TweetPublisher<br/>src/features/publisher/"]
-            F3["TweetEngagement<br/>src/features/engagement.py"]
-            F4["TweetAnalyzer<br/>src/features/analyzer/"]
+            F1["TweetScraper<br/>src/xuse/features/scraper/"]
+            F2["TweetPublisher<br/>src/xuse/features/publisher/"]
+            F3["TweetEngagement<br/>src/xuse/features/engagement.py"]
+            F4["TweetAnalyzer<br/>src/xuse/features/analyzer/"]
         end
     end
 
@@ -71,22 +71,25 @@ flowchart TD
     O2 --> X4
 ```
 
-`ConfigLoader` (`src/core/config_loader.py`) merges settings and account definitions; the orchestrator instantiates one full stack — browser, LLM service, feature modules, metrics recorder — per active account and runs them concurrently with `asyncio.gather(*tasks, return_exceptions=True)`.
+`ConfigLoader` (`src/xuse/core/config_loader.py`) merges settings and account definitions; the orchestrator instantiates one full stack — browser, LLM service, feature modules, metrics recorder — per active account and runs them concurrently with `asyncio.gather(*tasks, return_exceptions=True)`.
 
 ## 3. Module Map
 
 | Path | Responsibility |
 |---|---|
-| `src/main.py` | `TwitterOrchestrator`: loads config, spawns one asyncio task per account, runs the action pipelines, owns dedup keys and per-account cleanup. |
-| `src/core/config_loader.py` | Loads and exposes `config/settings.json` and `config/accounts.json`; helper accessors like `get_twitter_automation_setting`. |
-| `src/core/browser_manager/` | Browser lifecycle. `drivers.py` (Chrome/Firefox init, undetected-chromedriver, stealth), `options.py` (driver options, headless, window size), `cookies.py` (load and inject cookie files), `ua.py` (user-agent generation), `service.py` (the `BrowserManager` facade, proxy resolution, signed-in detection). |
-| `src/core/llm_service/` | Provider-agnostic LLM access. `clients.py` (OpenAI/Azure/Gemini client init from config), `generator.py` (`TextGenerator` with provider preference and fallback order), `prompts.py` (schema-first structured JSON prompt builder with few-shots and hard character limits), `parsing.py` (robust JSON extraction from model output), `service.py` (the `LLMService` facade: `generate_text`, `generate_structured`). |
-| `src/features/scraper/` | Read side. `service.py` (`TweetScraper`: profile, keyword-search, and arbitrary-URL/community timelines), `parsing.py` (tweet card → `ScrapedTweet`), `selectors.py` (centralized XPath/CSS selectors for X's DOM). |
-| `src/features/publisher/` | Write side. `orchestrator.py` (`TweetPublisher` facade), `composer.py` (compose-and-post with media), `content_generator.py` (LLM text for posts and quotes), `reply_handler.py`, `retweet_handler.py` (retweet vs. quote), `media_manager/` (download and stage media), `audience_selector.py` (community audience picker). |
-| `src/features/engagement.py` | `TweetEngagement`: likes and lightweight interactions. |
-| `src/features/analyzer/` | Decision layer. `service.py` (`TweetAnalyzer`: relevance scoring, sentiment, thread detection, structured analysis), `heuristics.py` (keyword/lexicon fallbacks), `prompts.py`, `schema.py` (JSON schema for structured analysis). |
-| `src/utils/` | `logger.py` (logging setup from config), `file_handler.py` (processed-action-key CSV store), `metrics.py` (`MetricsRecorder`: JSON counters + JSONL events), `login_state.py` (`wait_for_signed_in`), `proxy_manager.py` (proxy pools, hash/round-robin rotation, env interpolation), `progress.py`, `scroller.py`, `selenium_waits.py`. |
-| `src/data_models.py` | Pydantic models: `AccountConfig`, `ActionConfig`, `LLMSettings`, `ScrapedTweet`, `TweetContent`, cookie models. |
+| `src/xuse/orchestrator.py` | `TwitterOrchestrator`: loads config, spawns one asyncio task per account, runs the action pipelines, owns dedup keys and per-account cleanup. The legacy `python src/main.py` entry is a deprecation shim that runs this module. |
+| `src/xuse/cli.py`, `init_wizard.py`, `doctor.py` | Typer console script `x-use`: `run` (orchestrator with in-memory account/pipeline scoping), `init` (setup wizard), `doctor` (preflight checks), `mcp` (server entry). |
+| `src/xuse/mcp/` | MCP stdio server: `server.py` (FastMCP factory), `tools.py` / `write_tools.py` / `engage.py` (the 9 tools), `drafts.py` (draft store), `sessions.py` (lazy browser pool), `executor.py` / `actions.py` (execution, pacing, sanitized error envelopes). |
+| `tests/` | pytest suite (pure logic + MCP contract tests), `pytest.ini`, CI in `.github/workflows/ci.yml`. |
+| `src/xuse/core/config_loader.py` | Loads and exposes `config/settings.json` and `config/accounts.json`; helper accessors like `get_twitter_automation_setting`. |
+| `src/xuse/core/browser_manager/` | Browser lifecycle. `drivers.py` (Chrome/Firefox init, undetected-chromedriver, stealth), `options.py` (driver options, headless, window size), `cookies.py` (load and inject cookie files), `ua.py` (user-agent generation), `service.py` (the `BrowserManager` facade, proxy resolution, signed-in detection). |
+| `src/xuse/core/llm_service/` | Provider-agnostic LLM access. `clients.py` (OpenAI/Azure/Gemini client init from config), `generator.py` (`TextGenerator` with provider preference and fallback order), `prompts.py` (schema-first structured JSON prompt builder with few-shots and hard character limits), `parsing.py` (robust JSON extraction from model output), `service.py` (the `LLMService` facade: `generate_text`, `generate_structured`). |
+| `src/xuse/features/scraper/` | Read side. `service.py` (`TweetScraper`: profile, keyword-search, and arbitrary-URL/community timelines), `parsing.py` (tweet card → `ScrapedTweet`), `selectors.py` (centralized XPath/CSS selectors for X's DOM). |
+| `src/xuse/features/publisher/` | Write side. `orchestrator.py` (`TweetPublisher` facade), `composer.py` (compose-and-post with media), `content_generator.py` (LLM text for posts and quotes), `reply_handler.py`, `retweet_handler.py` (retweet vs. quote), `media_manager/` (download and stage media), `audience_selector.py` (community audience picker). |
+| `src/xuse/features/engagement.py` | `TweetEngagement`: likes and lightweight interactions. |
+| `src/xuse/features/analyzer/` | Decision layer. `service.py` (`TweetAnalyzer`: relevance scoring, sentiment, thread detection, structured analysis), `heuristics.py` (keyword/lexicon fallbacks), `prompts.py`, `schema.py` (JSON schema for structured analysis). |
+| `src/xuse/utils/` | `logger.py` (logging setup from config), `file_handler.py` (processed-action-key CSV store), `metrics.py` (`MetricsRecorder`: JSON counters + JSONL events), `login_state.py` (`wait_for_signed_in`), `proxy_manager.py` (proxy pools, hash/round-robin rotation, env interpolation), `progress.py`, `scroller.py`, `selenium_waits.py`. |
+| `src/xuse/models.py` | Pydantic models: `AccountConfig`, `ActionConfig`, `LLMSettings`, `ScrapedTweet`, `TweetContent`, cookie models. |
 | `config/` | `settings.json` (global), `accounts.json` (per-account array). |
 | `presets/` | Copy-paste starting points: `settings/` (defaults, Chrome undetected, proxy pools hash/round-robin) and `accounts/` (growth, brand_safe, replies_first, engagement_light, community_posting). |
 | `docs/CONFIG_REFERENCE.md` | Field-by-field schema for both config files. |
@@ -97,7 +100,7 @@ One run of `python src/main.py` executes the following per active account (see `
 
 1. **Config load and merge.** `ConfigLoader` reads both JSON files. Legacy override keys (`target_keywords_override`, `action_config_override`, …) are normalized onto current `AccountConfig` fields, then validated with `AccountConfig.model_validate`. Per-account values always win over `twitter_automation.action_config` global defaults.
 2. **Task spawn.** `run()` creates one coroutine per account and awaits them with `asyncio.gather`. Blocking Selenium work is pushed to threads via `asyncio.to_thread`, so scraping for one account does not block the event loop for others.
-3. **Login via cookies.** `BrowserManager` starts the configured browser (with resolved proxy and generated user agent), navigates to `browser_settings.cookie_domain_url`, injects cookies from `cookie_file_path` or inline `cookies`, and can wait up to `login_wait_seconds` for a signed-in state (`src/utils/login_state.py`); `BrowserManager` (`src/core/browser_manager/service.py`) also detects the logged-in handle used for own-tweet filtering.
+3. **Login via cookies.** `BrowserManager` starts the configured browser (with resolved proxy and generated user agent), navigates to `browser_settings.cookie_domain_url`, injects cookies from `cookie_file_path` or inline `cookies`, and can wait up to `login_wait_seconds` for a signed-in state (`src/xuse/utils/login_state.py`); `BrowserManager` (`src/xuse/core/browser_manager/service.py`) also detects the logged-in handle used for own-tweet filtering.
 4. **Pipelines.** Each is independently enabled by `ActionConfig` flags:
    - *Competitor reposts* — scrape configured `competitor_profiles`, filter by media/likes/retweet thresholds, then act (repost-as-rewrite, retweet, quote, or like).
    - *Community engagement* — scrape `https://x.com/i/communities/<community_id>`, then like/retweet/reply within per-run caps, skipping the account's own posts.
@@ -125,15 +128,15 @@ One run of `python src/main.py` executes the following per active account (see `
 
 **Guaranteed browser cleanup.** `BrowserManager.close_driver()` runs in the account task's `finally` block, so crashed pipelines cannot leak headless browser processes.
 
-## 6. v2.0 Target Architecture (In Progress)
+## 6. v2.0 Packaging, CLI, and MCP Layer (Shipped)
 
-Everything in this section is **planned** per the approved rebrand design (2026-07-22) and is not yet in the repository. The engine described above is kept intact; v2.0 wraps it in a package, a CLI, and an MCP server.
+v2.0 shipped the packaging, CLI, and MCP layer described here; the engine from sections 1–5 is behaviorally unchanged and now lives in the installable `src/xuse/` package.
 
-### 6.1 Package and CLI (Phase 1)
+### 6.1 Package and CLI (shipped in v2.0)
 
-- `pyproject.toml` with a src-layout package: loose `src/*` modules move to `src/xuse/` (`xuse/core`, `xuse/features`, `xuse/utils`, `xuse/models.py`, orchestrator). This is a move, not a rewrite — engine logic is untouched.
-- Python floor rises to 3.10+.
-- A Typer-based console script `x-use` replaces `python src/main.py`:
+- `pyproject.toml` with a src-layout package: the loose `src/*` modules now live in `src/xuse/` (`xuse/core`, `xuse/features`, `xuse/utils`, `xuse/models.py`, `xuse/orchestrator.py`). The move was import-only — engine logic is untouched — and `PROJECT_ROOT` is anchored by a marker walk in `xuse/core/config_loader.py` so config/data/log paths resolve from the repo root regardless of install location.
+- Python floor is 3.10+.
+- The Typer console script `x-use` is the primary entry point; `python src/main.py` remains as a deprecation shim through the v2.0.x series:
 
 | Command | Purpose |
 |---|---|
@@ -142,11 +145,11 @@ Everything in this section is **planned** per the approved rebrand design (2026-
 | `x-use mcp` | Start the MCP server. |
 | `x-use doctor` | Environment checks: Chrome/driver, cookie validity, LLM keys, proxy reachability. |
 
-### 6.2 MCP Server Layer (Phase 1 flagship)
+### 6.2 MCP Server Layer (shipped in v2.0)
 
-Planned module: `xuse/mcp/server.py`, built on the official MCP Python SDK **stable v1.x** `FastMCP` (`from mcp.server.fastmcp import FastMCP`) over **stdio** transport, so it plugs into Claude Desktop, Claude Code, Cursor, and Windsurf. Note: SDK v2 (alpha) renames `FastMCP` to `MCPServer` under `mcp.server.mcpserver`; x-use pins v1.x until v2 stabilizes and will document the migration.
+Module: `src/xuse/mcp/`, built on the official MCP Python SDK **stable v1.x** `FastMCP` (`from mcp.server.fastmcp import FastMCP`) over **stdio** transport, so it plugs into Claude Desktop, Claude Code, Cursor, and Windsurf. Note: SDK v2 (alpha) renames `FastMCP` to `MCPServer` under `mcp.server.mcpserver`; x-use pins `mcp>=1,<2` until v2 stabilizes.
 
-Planned tools, each a thin wrapper over an existing module:
+Nine tools, each a thin wrapper over an existing module (no Selenium logic in tools):
 
 | Tool | Wraps |
 |---|---|
@@ -160,7 +163,7 @@ Planned tools, each a thin wrapper over an existing module:
 | `get_metrics(account)` | metrics recorder summaries |
 | `approve_draft(draft_id)` | draft store → publisher |
 
-**Draft mode** (planned, human-in-the-loop): on by default for MCP usage (can be disabled in settings), write-tools return a draft object instead of posting; nothing reaches X until `approve_draft` is called.
+**Draft mode** (human-in-the-loop): **on by default** (opt out via the `mcp.draft_mode` setting). Write-tools return a draft object (`draft_id`, account, action, payload, preview) instead of posting; nothing reaches X until `approve_draft` is called, and each draft executes exactly once. Drafts persist to `data/drafts.jsonl`.
 
 ```mermaid
 flowchart LR
@@ -172,7 +175,7 @@ flowchart LR
     A --> P
 ```
 
-**Browser lifecycle for MCP** (planned): a lazy per-account session pool. A browser session starts on the first tool call that needs it, stays warm for subsequent calls, and is reaped after an idle timeout — so MCP calls stay fast without keeping one browser per configured account alive forever, and never hang the client on cold starts.
+**Browser lifecycle for MCP** (`sessions.py`): a lazy per-account session pool. A browser session starts on the first tool call that needs it, stays warm for subsequent calls, and is reaped after an idle timeout (default ~10 min). Read-only tools never start a browser. Tool failures return structured, secret-sanitized error envelopes and never crash the server; stdout-bound logging is redirected to stderr to protect JSON-RPC framing.
 
 ### 6.3 Later Phases
 
@@ -181,7 +184,7 @@ flowchart LR
 
 ## 7. Design Decisions and Trade-offs
 
-**Browser automation vs. the official API.** The X API's write tiers are priced far beyond hobby and indie budgets, and key capabilities used here (community posting, timeline scraping at scale, engagement browsing) are restricted or absent. Driving a real browser costs $0 in API fees and can do anything a logged-in user can. The price is fragility: X ships DOM changes without notice, so selectors (`src/features/scraper/selectors.py` and the publisher handlers) need occasional maintenance, and anti-bot pressure requires the stealth/proxy machinery. We accept that trade and engineer around it (centralized selectors, JS-click fallbacks, undetected-chromedriver, per-account proxies).
+**Browser automation vs. the official API.** The X API's write tiers are priced far beyond hobby and indie budgets, and key capabilities used here (community posting, timeline scraping at scale, engagement browsing) are restricted or absent. Driving a real browser costs $0 in API fees and can do anything a logged-in user can. The price is fragility: X ships DOM changes without notice, so selectors (`src/xuse/features/scraper/selectors.py` and the publisher handlers) need occasional maintenance, and anti-bot pressure requires the stealth/proxy machinery. We accept that trade and engineer around it (centralized selectors, JS-click fallbacks, undetected-chromedriver, per-account proxies).
 
 **Cookie auth instead of password login.** Automated username/password login is the highest-signal bot behavior X can observe and frequently triggers challenges. Importing cookies from a session the user established manually is more reliable, keeps credentials out of config files entirely, and survives across runs. The cost — cookies expire and must be re-exported — is mitigated by `login_wait_seconds`, which lets a human complete login once in the opened browser while the run waits.
 
@@ -191,10 +194,10 @@ flowchart LR
 
 ## 8. Extension Points
 
-**Adding a pipeline.** Define any new config fields on `ActionConfig` in `src/data_models.py`; implement the behavior in a module under `src/features/`; wire it into `TwitterOrchestrator._process_account` in `src/main.py` following the existing pattern — check the enable flag, respect per-run caps, build a unique action key for dedup, record metrics events, and sleep the randomized delay after each action. Document the new fields in `docs/CONFIG_REFERENCE.md`.
+**Adding a pipeline.** Define any new config fields on `ActionConfig` in `src/xuse/models.py`; implement the behavior in a module under `src/xuse/features/`; wire it into `TwitterOrchestrator._process_account` in `src/xuse/orchestrator.py` following the existing pattern — check the enable flag, respect per-run caps, build a unique action key for dedup, record metrics events, and sleep the randomized delay after each action. Document the new fields in `docs/CONFIG_REFERENCE.md`.
 
-**Adding an MCP tool (planned pattern).** Once `xuse/mcp/server.py` lands, a tool is a `FastMCP`-decorated function that validates inputs with the existing Pydantic models, borrows a session from the pool, delegates to a feature module, and returns a JSON-serializable result (or a draft object when draft mode is on). Tools should never contain Selenium logic themselves.
+**Adding an MCP tool.** In `src/xuse/mcp/`, a tool is a `FastMCP`-decorated function that validates inputs with the existing Pydantic models, borrows a session from the pool, delegates to a feature module, and returns a JSON-serializable result (or a draft object when draft mode is on). Tools should never contain Selenium logic themselves.
 
-**Adding an LLM provider.** Extend `initialize_clients` in `src/core/llm_service/clients.py` to construct the client from `api_keys` config, teach `TextGenerator` in `generator.py` how to call it, and add its name to the service preference order in `constants.py`. Structured prompting and JSON parsing are provider-agnostic and come for free.
+**Adding an LLM provider.** Extend `initialize_clients` in `src/xuse/core/llm_service/clients.py` to construct the client from `api_keys` config, teach `TextGenerator` in `generator.py` how to call it, and add its name to the service preference order in `constants.py`. Structured prompting and JSON parsing are provider-agnostic and come for free.
 
-**Fixing selectors.** When X changes its DOM, scraping fixes go to `src/features/scraper/selectors.py` and `parsing.py`; posting/reply/retweet fixes go to the respective handler in `src/features/publisher/`; audience-picker fixes go to `src/features/publisher/audience_selector.py`. Including a DOM snippet of the changed element in the pull request (or issue) makes review fast.
+**Fixing selectors.** When X changes its DOM, scraping fixes go to `src/xuse/features/scraper/selectors.py` and `parsing.py`; posting/reply/retweet fixes go to the respective handler in `src/xuse/features/publisher/`; audience-picker fixes go to `src/xuse/features/publisher/audience_selector.py`. Including a DOM snippet of the changed element in the pull request (or issue) makes review fast.

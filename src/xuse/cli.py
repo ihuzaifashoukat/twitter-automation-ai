@@ -7,7 +7,7 @@ import typer
 from xuse.pipelines import ALL_PIPELINE_ENABLE_FLAGS, PIPELINE_FLAGS
 
 app = typer.Typer(
-    help="x-use — browser-native AI agents for X (Twitter).",
+    help="x-use - browser-native AI agents for X (Twitter).",
     no_args_is_help=True,
 )
 

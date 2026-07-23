@@ -6,7 +6,7 @@ Legend: `[x]` shipped · `[ ]` planned or in progress.
 
 ---
 
-## Phase 1 — v2.0 "x-use" relaunch (nearly complete — rename, PyPI publish, and directory submissions remain)
+## Phase 1 — v2.0 "x-use" relaunch (nearly complete — MCP directory submissions remain)
 
 The goal of v2.0: go from "clone the repo and run `python src/main.py`" to `pip install x-use-mcp`, a guided init, and first-class MCP support — without rewriting the engine.
 
@@ -15,7 +15,7 @@ The goal of v2.0: go from "clone the repo and run `python src/main.py`" to `pip 
 - [ ] Rename the GitHub repository `twitter-automation-ai` → `x-use` (stars, forks, and old URLs are preserved by GitHub redirects)
 - [x] Add `pyproject.toml` and move the codebase into a src-layout package: `src/xuse/` (`xuse/core`, `xuse/features`, `xuse/utils`, `xuse/models`) — a structural move, not a rewrite; existing engine logic carries over
 - [x] Raise the Python floor to 3.10+
-- [ ] Publish to PyPI as `x-use-mcp` (the bare `x-use` name was rejected by PyPI as too similar to an existing `xuse` project)
+- [x] Publish to PyPI as `x-use-mcp` (the bare `x-use` name was rejected by PyPI as too similar to an existing `xuse` project)
 
 ### CLI (Typer)
 

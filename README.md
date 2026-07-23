@@ -21,7 +21,13 @@ The X API's pricing tiers put write access out of reach for exactly the people w
 
 ## Install
 
-One command, any major OS. The installer clones the repo, installs x-use into its own virtual environment, and finishes with `x-use doctor` so you can see what is left to configure.
+From PyPI (CLI and MCP server):
+
+```bash
+pip install x-use-mcp
+```
+
+For the full repo setup (presets, example configs, docs), the one-line installer clones the repo, installs x-use into its own virtual environment, and finishes with `x-use doctor` so you can see what is left to configure.
 
 Windows (PowerShell):
 
@@ -43,7 +49,7 @@ cd x-use
 pip install -e .
 ```
 
-Requires Python 3.10+ and Chrome. Any of these gives you the `x-use` command. PyPI publishing (`pip install x-use-mcp`) is on the roadmap.
+Requires Python 3.10+ and Chrome. Any of these gives you the `x-use` command.
 
 ## Set up
 

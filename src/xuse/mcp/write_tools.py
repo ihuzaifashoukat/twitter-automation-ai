@@ -14,20 +14,13 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from xuse.orchestrator import TwitterOrchestrator
+from xuse.pipelines import PIPELINE_FLAGS as _PIPELINE_FLAGS
 
 from . import actions, executor as ex
 from .executor import Ctx, ToolError
 from .tools import draft_response, guard, ok_, scrape_single_tweet
 
 logger = logging.getLogger(__name__)
-
-_PIPELINE_FLAGS = {
-    "reposts": "enable_competitor_reposts",
-    "replies": "enable_keyword_replies",
-    "likes": "enable_liking_tweets",
-    "retweets": "enable_keyword_retweets",
-    "community": "enable_community_engagement",
-}
 
 
 def register_write_tools(server, ctx: Ctx) -> None:
@@ -127,10 +120,11 @@ def register_write_tools(server, ctx: Ctx) -> None:
         """Run the legacy batch automation cycle in the background and return
         a run handle immediately (progress goes to the logs — this never
         silent-blocks). `account` limits the run to one account; `pipelines`
-        is a comma-separated subset of: reposts, replies, likes, retweets,
-        community (mapped onto the account's ActionConfig enable flags for
-        this run only — config files are never mutated). Draft mode does not
-        apply to batch cycles."""
+        is a comma-separated subset of: competitor_reposts, keyword_replies,
+        keyword_retweets, likes, content_curation, community_engagement
+        (mapped onto the account's ActionConfig enable flags for this run
+        only — config files are never mutated; same names as the CLI's
+        `x-use run --pipeline`). Draft mode does not apply to batch cycles."""
         raw_accounts = ctx.config_loader.get_accounts_config()
         targets: List[Dict[str, Any]] = []
         for raw in raw_accounts:

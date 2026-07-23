@@ -4,21 +4,12 @@ from typing import Optional
 
 import typer
 
+from xuse.pipelines import ALL_PIPELINE_ENABLE_FLAGS, PIPELINE_FLAGS
+
 app = typer.Typer(
     help="x-use — browser-native AI agents for X (Twitter).",
     no_args_is_help=True,
 )
-
-# Pipeline name -> the ActionConfig enable-flag that gates it in the orchestrator.
-PIPELINE_FLAGS = {
-    "competitor_reposts": "enable_competitor_reposts",
-    "keyword_replies": "enable_keyword_replies",
-    "keyword_retweets": "enable_keyword_retweets",
-    "likes": "enable_liking_tweets",
-    "content_curation": "enable_content_curation_posts",
-    "community_engagement": "enable_community_engagement",
-}
-ALL_PIPELINE_ENABLE_FLAGS = list(PIPELINE_FLAGS.values())
 
 
 def _apply_pipeline_override(orchestrator, pipeline: str) -> None:

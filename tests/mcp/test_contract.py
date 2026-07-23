@@ -99,6 +99,17 @@ async def test_run_cycle_without_accounts_returns_error_envelope(make_config_loa
 
 
 @pytest.mark.asyncio
+async def test_run_cycle_rejects_unknown_pipeline_with_canonical_names(mcp_server):
+    """Pipeline names are shared with the CLI (xuse.pipelines) — a stale alias
+    like 'reposts' errors and the message lists the canonical names."""
+    result = await call_tool(mcp_server, "run_cycle", {"pipelines": "reposts,likes"})
+    error = assert_error_envelope(result, "Unknown pipeline")
+    assert error["type"] == "ToolError"
+    for name in ("competitor_reposts", "keyword_replies", "content_curation", "community_engagement"):
+        assert name in error["message"]
+
+
+@pytest.mark.asyncio
 async def test_search_tweets_unknown_account_returns_error_envelope(mcp_server):
     result = await call_tool(mcp_server, "search_tweets", {"keywords": "ai", "account": "ghost"})
     error = assert_error_envelope(result, "ghost")

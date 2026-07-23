@@ -58,6 +58,11 @@ Notes
   - cookie_domain_url: base URL for cookie domain navigation (e.g., https://x.com)
   - login_wait_seconds: Optional. If > 0, after applying cookies the browser opens X home and waits up to this many seconds for a signed-in state. Use this to complete manual login once when cookies are missing/expired.
   - chrome_driver_path / gecko_driver_path (optional): use a specific local driver binary. The app prefers local drivers if found.
+- mcp (settings for the `x-use mcp` server)
+  - draft_mode: bool, default `true`. When on, write tools (`post_tweet`, `generate_and_post`, `reply_to_tweet`, `engage`) build the full payload, store a draft, and change nothing until `approve_draft(draft_id)` is called. Set to `false` to let write tools act immediately.
+  - session_idle_timeout_seconds: idle timeout for the per-account browser session pool before sessions are reaped. Default `600`.
+  - cold_start_timeout_seconds: max wait for a browser session to cold-start before the tool call fails with a structured error. Default `180`.
+  - drafts_file: path of the persistent draft store (JSONL). Default `data/drafts.jsonl` under the project root.
 
 accounts.json (per account)
 

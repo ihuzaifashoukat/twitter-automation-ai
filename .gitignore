@@ -186,7 +186,7 @@ data/cookies/*.json
 *.swp
 *~
 
-# AI-assistant / internal planning docs (local-only, never commit)
+# Internal working docs (local-only, never commit)
 PRD.md
 AGENT.md
 AGENTS.md

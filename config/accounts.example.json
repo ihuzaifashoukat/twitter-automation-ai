@@ -1,21 +1,18 @@
 [
   {
-    "account_id": "tech_innovator_001",
-    "is_active": true,
-    "cookie_file_path": "config/dummy_cookies_example.json",
+    "account_id": "your_account_id_here",
+    "is_active": false,
+    "cookie_file_path": "data/cookies/your_cookies.json",
     "proxy": null,
-    "post_to_community": true,
-    "community_id": "1497313371053510658",
-    "community_name": "One Piece",
+    "post_to_community": false,
+    "community_id": "0000000000000000000",
+    "community_name": "Your Community Name",
     "target_keywords_override": [
-      "Artificial General Intelligence",
-      "Large Language Models applications",
-      "AI Ethics in practice",
-      "Future of AI"
+      "example keyword one",
+      "example keyword two"
     ],
     "competitor_profiles_override": [
-      "https://x.com/OpenAI"
-
+      "https://x.com/example_profile"
     ],
     "llm_settings_override": {
       "service_preference": "gemini",
@@ -57,10 +54,8 @@
       "enable_keyword_retweets": true,
       "max_retweets_per_keyword_run": 1,
       "like_tweets_from_keywords": [
-        "Artificial General Intelligence",
-        "Large Language Models applications",
-        "AI Ethics in practice",
-        "Future of AI"
+        "example keyword one",
+        "example keyword two"
       ],
       "enable_community_engagement": true,
       "enable_community_likes": true,
@@ -71,5 +66,4 @@
       "community_reply_only_recent_tweets_hours": 24
     }
   }
-
 ]

@@ -176,6 +176,7 @@ processed_tweets_log.csv
 # Real cookie/session files (tracked dummy examples stay committed)
 *.cookie
 *.cookies.json
+config/*_cookies.json
 config/cookies/
 data/cookies/*.json
 !data/cookies/dummy_cookies_example.json

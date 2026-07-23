@@ -10,6 +10,7 @@ import asyncio
 import functools
 import json
 import logging
+import re
 from typing import Any, Dict, List, Optional
 
 from xuse.core.config_loader import PROJECT_ROOT
@@ -21,6 +22,10 @@ from .executor import Ctx, ToolError
 from .sessions import SessionError
 
 logger = logging.getLogger(__name__)
+
+# Account ids are interpolated into filesystem paths; restrict to a charset
+# that cannot traverse (no dots, slashes, or backslashes).
+_SAFE_ACCOUNT_ID = re.compile(r"[A-Za-z0-9_-]+")
 
 
 def ok_(**fields: Any) -> Dict[str, Any]:
@@ -93,6 +98,8 @@ def register_tools(server, ctx: Ctx) -> None:
     async def get_metrics(account: str) -> Dict[str, Any]:
         """Read recorded metrics for an account (counters + recent events).
         Read-only — never starts a browser."""
+        if not _SAFE_ACCOUNT_ID.fullmatch(account):
+            raise ToolError(f"Invalid account id: {account!r}")
         summary_path = PROJECT_ROOT / "data" / "metrics" / f"{account}.json"
         events_path = PROJECT_ROOT / "logs" / "accounts" / f"{account}.jsonl"
         summary: Dict[str, Any] = {

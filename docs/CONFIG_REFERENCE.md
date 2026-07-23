@@ -9,6 +9,8 @@ settings.json
 
 - api_keys
   - openai_api_key, gemini_api_key, azure_openai_api_key, azure_openai_endpoint, azure_openai_deployment, azure_api_version
+  - Environment override: `OPENAI_API_KEY`, `GEMINI_API_KEY`, and `AZURE_OPENAI_API_KEY` — from the process environment or a `.env` file at the project root (see `.env.example`) — take precedence over the values here: **env > settings.json**. The override applies only to the three API keys; Azure endpoint/deployment/api_version stay in settings.json.
+  - Placeholder values (e.g. `YOUR_OPENAI_API_KEY`) are rejected from BOTH sources; a provider with no valid key is simply not initialized. Key values are never logged — logs state only which source (env var name or settings.json) supplied a key.
 - twitter_automation
   - response_interval_seconds: Base delay between actions.
   - media_directory: Folder for downloaded media.
@@ -86,6 +88,7 @@ accounts.json (per account)
 Notes
 
 - Unknown fields are generally ignored; keep to the provided keys for predictable behavior.
+- `${VAR}` interpolation remains the mechanism for proxy strings only (e.g. `"http://user:${RESI_PASS}@host:port"` in `proxy_pools`); it reads the process environment and does not apply to any other config field. LLM API keys use the env-var override described under `api_keys` above.
 - For pools with env vars, ensure your shell exports them before running (`export RESI_PASS=...`).
 - Cookies must match `cookie_domain_url` domain; the app navigates there before injection.
 - Community posting: the app opens the “Choose audience” menu and selects by `community_id` (preferred) or visible `community_name`. It scrolls virtualized lists and uses JS-click fallbacks when needed.

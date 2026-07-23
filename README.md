@@ -4,14 +4,14 @@
 
 x-use drives a real, stealth-hardened browser instead of the paid X API: it posts, replies, searches, and engages across multiple accounts, generates content with your own LLM, and exposes everything as MCP tools so Claude Desktop, Claude Code, Cursor, and other MCP clients can operate your X presence directly.
 
-> x-use is the v2 relaunch of **twitter-automation-ai**. The GitHub repository will be renamed to `x-use` soon — old URLs keep redirecting.
+> x-use is the v2 relaunch of **twitter-automation-ai**. The repository was renamed to `x-use`; old URLs keep redirecting.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/ihuzaifashoukat/twitter-automation-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/ihuzaifashoukat/twitter-automation-ai/actions/workflows/ci.yml)
-[![Issues](https://img.shields.io/github/issues/ihuzaifashoukat/twitter-automation-ai)](https://github.com/ihuzaifashoukat/twitter-automation-ai/issues)
-[![Forks](https://img.shields.io/github/forks/ihuzaifashoukat/twitter-automation-ai)](https://github.com/ihuzaifashoukat/twitter-automation-ai/network/members)
-[![Stars](https://img.shields.io/github/stars/ihuzaifashoukat/twitter-automation-ai)](https://github.com/ihuzaifashoukat/twitter-automation-ai/stargazers)
+[![CI](https://github.com/ihuzaifashoukat/x-use/actions/workflows/ci.yml/badge.svg)](https://github.com/ihuzaifashoukat/x-use/actions/workflows/ci.yml)
+[![Issues](https://img.shields.io/github/issues/ihuzaifashoukat/x-use)](https://github.com/ihuzaifashoukat/x-use/issues)
+[![Forks](https://img.shields.io/github/forks/ihuzaifashoukat/x-use)](https://github.com/ihuzaifashoukat/x-use/network/members)
+[![Stars](https://img.shields.io/github/stars/ihuzaifashoukat/x-use)](https://github.com/ihuzaifashoukat/x-use/stargazers)
 
 <!-- DEMO GIF PLACEHOLDER: record `x-use init` → paste MCP snippet → draft → approve_draft, then embed the GIF here. -->
 
@@ -61,8 +61,8 @@ Dynamic and static residential proxies with free testing and unlimited, non-expi
 PyPI publishing (`pip install x-use`) is coming with the v2.0 release — for now, install from the repo:
 
 ```bash
-git clone https://github.com/ihuzaifashoukat/twitter-automation-ai.git
-cd twitter-automation-ai
+git clone https://github.com/ihuzaifashoukat/x-use.git
+cd x-use
 pip install -e .
 ```
 

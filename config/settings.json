@@ -84,19 +84,11 @@
     "custom_user_agent": null,
     "proxy": null,
     "window_size": "1920,1080",
-    "use_undetected_chromedriver": true,
+    "use_undetected_chromedriver": false,
     "enable_stealth": false,
     "login_wait_seconds": 60,
     "cookie_domain_url": "https://x.com",
-    "driver_options": [
-      "--no-sandbox",
-      "--disable-dev-shm-usage",
-      "--ignore-certificate-errors",
-      "--disable-gpu",
-      "--log-level=3",
-      "--disable-notifications",
-      "--disable-popup-blocking"
-    ],
+    "driver_options": [],
     "page_load_timeout_seconds": 30,
     "script_timeout_seconds": 30,
     "proxy_pools": {

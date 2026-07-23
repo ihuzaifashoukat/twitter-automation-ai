@@ -357,6 +357,15 @@ Relevance filters (optional):
 - Rotation strategies: `hash` (stable per-account) or `round_robin` (uses `data/proxy_pools_state.json`).
 - Env interpolation: `${ENV_VAR}` inside proxy strings is expanded at runtime.
 
+### Recommended Proxy Providers
+
+#### RapidProxy
+[RapidProxy](https://www.rapidproxy.io/?ref=aut)
+
+<img src="https://i.ibb.co/TqYSs4yr/image-10.png" alt="RapidProxy Banner" width="400" />
+
+Use RapidProxy for stable, high-performance proxy access in automation workflows. It offers dynamic and static residential proxies with free testing and unlimited, non-expiring traffic. Boost your Twitter automation performance with a consistent and secure proxy infrastructure.
+
 ## Cookies
 
 - Point `cookie_file_path` to a JSON array of cookies for `x.com`. The app navigates to `browser_settings.cookie_domain_url` before injecting cookies.
